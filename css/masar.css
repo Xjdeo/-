@@ -204,6 +204,7 @@ progress::-moz-progress-bar{background:var(--brass);border-radius:99px}
 select,input[type="search"],input[type="text"]{font:inherit;font-size:.95rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-s);padding:.45em .7em;min-width:0;max-width:100%}
 select:hover,input[type="search"]:hover{border-color:var(--brass)}
 select{padding-inline-end:2em}
+select option.last-opened{background:var(--tint-2);color:var(--ink);font-weight:700}
 
 /* ── الأسئلة ── */
 .qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}

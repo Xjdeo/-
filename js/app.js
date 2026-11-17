@@ -69,6 +69,22 @@
     }
   };
 
+  /* آخر خيار فُتح في كل قائمة منسدلة */
+  function remember(key, val) { var l = store.get('lastSel', {}); l[key] = String(val); store.set('lastSel', l); }
+  function recall(key) { var l = store.get('lastSel', {}); return Object.prototype.hasOwnProperty.call(l, key) ? l[key] : null; }
+  function markLastOpened(root) {
+    (root || document).querySelectorAll('select[data-mem]').forEach(function (sel) {
+      var v = recall(sel.getAttribute('data-mem'));
+      if (v == null) return;
+      Array.prototype.forEach.call(sel.options, function (o) {
+        if (o.value === v && !o.classList.contains('last-opened')) {
+          o.classList.add('last-opened');
+          o.textContent = '● ' + o.textContent + ' (آخر ما فتحته)';
+        }
+      });
+    });
+  }
+
   /* ───────────── الفهارس ───────────── */
   var qById = {};
   QS.forEach(function (q) { qById[q.id] = q; });
@@ -191,7 +207,7 @@
   }
   var afterHooks = [];
   function after(fn) { afterHooks.push(fn); }
-  function afterRender() { var hs = afterHooks; afterHooks = []; hs.forEach(function (f) { f(); }); }
+  function afterRender() { var hs = afterHooks; afterHooks = []; hs.forEach(function (f) { f(); }); markLastOpened(main); }
 
   function updateNav() {
     var key = route.page === 'unit' ? (route.unit === 'all' ? 'all' : 'units') : route.page;
@@ -322,7 +338,7 @@
   /* ───────────── مكوّن السؤال (التدريب) ───────────── */
   var PR = {};
   function prState(key) {
-    if (!PR[key]) PR[key] = { mode: 'round', round: null, free: { topic: '', status: 'all', i: 0 }, cur: { qid: null, pick: null, checked: false } };
+    if (!PR[key]) PR[key] = { mode: 'round', round: null, free: { topic: recall('ft:' + key) || '', status: 'all', i: 0 }, cur: { qid: null, pick: null, checked: false } };
     return PR[key];
   }
   function resetCur(st, qid) { if (st.cur.qid !== qid) st.cur = { qid: qid, pick: null, checked: false }; }
@@ -380,7 +396,7 @@
     if ((p.set || p.topic) && st.nonce !== navNonce) {
       st.nonce = navNonce;
       if (p.set) startRound(st, ids, p.set);
-      if (p.topic != null && p.topic !== '') { st.mode = 'free'; st.free.topic = p.topic.indexOf(':') > 0 ? p.topic : (u.id + ':' + p.topic); st.free.status = 'all'; st.free.i = 0; }
+      if (p.topic != null && p.topic !== '') { st.mode = 'free'; st.free.topic = p.topic.indexOf(':') > 0 ? p.topic : (u.id + ':' + p.topic); remember('ft:' + key, st.free.topic); st.free.status = 'all'; st.free.i = 0; }
     }
     if (st.mode === 'round' && !st.round) startRound(st, ids, 'all');
     var html = '<div class="pagehead"><p class="eyebrow">' + h(u.name) + ' · ' + h(range(u.from, u.to)) + '</p><h1>التدريب الموضوعي</h1>' +
@@ -444,7 +460,7 @@
       return '<option value="' + t.key + '"' + (f.topic === t.key ? ' selected' : '') + '>' + h((u.id === 'all' ? t.unit.name + ': ' : '') + t.t.title) + '</option>';
     }).join('');
     var statuses = [['all', 'الكل'], ['unanswered', 'لم يُجَب'], ['wrong', 'أخطأت'], ['right', 'أصبت'], ['due', 'مراجعة اليوم']];
-    return '<div class="toolbar"><div class="field"><label for="ft-' + key + '">المحور</label><select id="ft-' + key + '" data-change="ftopic" data-ctx="' + key + '">' + topicOpts + '</select></div>' +
+    return '<div class="toolbar"><div class="field"><label for="ft-' + key + '">المحور</label><select id="ft-' + key + '" data-mem="ft:' + key + '" data-change="ftopic" data-ctx="' + key + '">' + topicOpts + '</select></div>' +
       '<div class="field"><span class="lbl" id="fsl-' + key + '">الحالة</span><div class="seg" role="group" aria-labelledby="fsl-' + key + '">' +
       statuses.map(function (s) { return '<button type="button" data-act="fstatus" data-ctx="' + key + '" data-status="' + s[0] + '" aria-pressed="' + (f.status === s[0]) + '">' + h(s[1]) + '</button>'; }).join('') +
       '</div></div></div>';
@@ -480,7 +496,7 @@
   }
 
   /* — بنك الأسئلة — */
-  var BANK = { unit: '', cat: '', status: 'all', view: 'practice' };
+  var BANK = { unit: recall('bank:unit') || '', cat: recall('bank:cat') || '', status: 'all', view: 'practice' };
   PAGES.bank = function () {
     var key = 'bank', st = prState(key);
     st.mode = 'free';
@@ -497,8 +513,8 @@
     var html = '<div class="pagehead"><p class="eyebrow">' + h(C.reference) + '</p><h1>بنك الأسئلة</h1>' +
       '<p class="read">' + h(QS.length) + ' سؤالًا من الفصل كله، لكل منها صفحة في المذكرة وتعليل. الأسئلة صياغات تعليمية مقترحة، وليست أسئلة رسمية.</p></div>' +
       '<div class="toolbar">' +
-      '<div class="field"><label for="bu">الوحدة</label><select id="bu" data-change="bank" data-k="unit">' + unitOpts + '</select></div>' +
-      '<div class="field"><label for="bc">التصنيف</label><select id="bc" data-change="bank" data-k="cat">' + catOpts + '</select></div>' +
+      '<div class="field"><label for="bu">الوحدة</label><select id="bu" data-mem="bank:unit" data-change="bank" data-k="unit">' + unitOpts + '</select></div>' +
+      '<div class="field"><label for="bc">التصنيف</label><select id="bc" data-mem="bank:cat" data-change="bank" data-k="cat">' + catOpts + '</select></div>' +
       '<div class="field"><span class="lbl" id="bsl">الحالة</span><div class="seg" role="group" aria-labelledby="bsl">' +
       statuses.map(function (s) { return '<button type="button" data-act="bankstatus" data-status="' + s[0] + '" aria-pressed="' + (BANK.status === s[0]) + '">' + h(s[1]) + '</button>'; }).join('') + '</div></div>' +
       '<div class="field"><span class="lbl" id="bvl">العرض</span><div class="seg" role="group" aria-labelledby="bvl">' +
@@ -625,7 +641,7 @@
       '<section class="panel"><h2>مراجعة الإجابات</h2><div class="toolbar"><div class="field"><span class="lbl" id="rvl">الأسئلة</span><div class="seg" role="group" aria-labelledby="rvl">' +
       '<button type="button" data-act="revf" data-f="all" aria-pressed="' + (REV.filter === 'all') + '">كل الأسئلة</button>' +
       '<button type="button" data-act="revf" data-f="missed" aria-pressed="' + (REV.filter === 'missed') + '">الأخطاء والمتروكة (' + h(missed.length) + ')</button></div></div>' +
-      (unitsIn.length > 1 ? '<div class="field"><label for="revu">الوحدة</label><select id="revu" data-change="revu"><option value="">كل الوحدات</option>' + unitsIn.map(function (uid) { return '<option value="' + uid + '"' + (REV.unit === uid ? ' selected' : '') + '>' + h(unitById[uid].name) + '</option>'; }).join('') + '</select></div>' : '') +
+      (unitsIn.length > 1 ? '<div class="field"><label for="revu">الوحدة</label><select id="revu" data-mem="revu" data-change="revu"><option value="">كل الوحدات</option>' + unitsIn.map(function (uid) { return '<option value="' + uid + '"' + (REV.unit === uid ? ' selected' : '') + '>' + h(unitById[uid].name) + '</option>'; }).join('') + '</select></div>' : '') +
       '</div>' + review + '</section>';
   }
 
@@ -659,7 +675,7 @@
   };
 
   /* — الاختبار الشامل — */
-  var MOCK = { units: UNITS.map(function (u) { return u.id; }), n: 20 };
+  var MOCK = { units: UNITS.map(function (u) { return u.id; }), n: parseInt(recall('mockn'), 10) || 20 };
   PAGES.mock = function (inUnit) {
     var ex = activeExam(), p = route.params;
     if (p.result) { var at = attempts().filter(function (a) { return a.id === p.result; })[0]; if (at) return examResult(at); }
@@ -678,7 +694,7 @@
       '<div class="field" style="margin-top:12px"><span class="lbl" id="mpl">اختيارات جاهزة</span><div class="chips" role="group" aria-labelledby="mpl">' +
       (C.mockPresets || []).map(function (pr, i) { var on = pr.units.join() === MOCK.units.join(); return '<button type="button" class="chip" data-act="mockpreset" data-i="' + i + '" aria-pressed="' + on + '">' + h(pr.label) + '</button>'; }).join('') +
       '</div></div>' +
-      '<div class="field" style="margin-top:12px;max-width:320px"><label for="mockn">عدد الأسئلة والمدة</label><select id="mockn" data-change="mockn"' + (pool ? '' : ' disabled') + '>' +
+      '<div class="field" style="margin-top:12px;max-width:320px"><label for="mockn">عدد الأسئلة والمدة</label><select id="mockn" data-mem="mockn" data-change="mockn"' + (pool ? '' : ' disabled') + '>' +
       counts.map(function (c) { return '<option value="' + c + '"' + (c === MOCK.n ? ' selected' : '') + '>' + h(qWord(c)) + ' في ' + h(minWord(c)) + '</option>'; }).join('') + '</select></div>' +
       '<p class="small" style="margin-top:10px">في الوحدات المختارة ' + h(qWord(pool)) + '.</p>' +
       '<p class="note">المحاكاة للتدريب وليست نموذجًا رسميًّا للاختبار. يستمر العداد إذا غادرت الصفحة.</p>' +
@@ -691,14 +707,15 @@
   UNIT_TABS.maps = function (u) {
     var topics = topicsOf(u.id), p = route.params;
     var key = u.id;
-    var ti = p.t != null ? parseInt(p.t, 10) : (MAPOPEN[key + ':t'] || 0);
+    var ti = p.t != null ? parseInt(p.t, 10) : (MAPOPEN[key + ':t'] != null ? MAPOPEN[key + ':t'] : (parseInt(recall('map:' + u.id), 10) || 0));
     if (u.id === 'all' && p.t != null && String(p.t).indexOf(':') > 0) ti = topics.map(function (t) { return t.key; }).indexOf(p.t);
     if (!(ti >= 0 && ti < topics.length)) ti = 0;
     MAPOPEN[key + ':t'] = ti;
+    remember('map:' + u.id, ti);
     var T = topics[ti], t = T.t;
     var qn = QS.filter(function (q) { return topicKeyOf(q) === T.key; }).length;
     var open = MAPOPEN[key + ':' + T.key];
-    var sel = '<select id="mapsel" data-change="mapsel" data-unit="' + u.id + '">' + topics.map(function (x, i) {
+    var sel = '<select id="mapsel" data-mem="map:' + u.id + '" data-change="mapsel" data-unit="' + u.id + '">' + topics.map(function (x, i) {
       return '<option value="' + i + '"' + (i === ti ? ' selected' : '') + '>' + h((u.id === 'all' ? x.unit.name + ': ' : '') + x.t.title) + '</option>';
     }).join('') + '</select>';
     var branches = t.nodes.map(function (n, i) {
@@ -738,13 +755,14 @@
     var list = comparisonsOf(u.id);
     var html = '<div class="pagehead"><p class="eyebrow">' + h(u.name) + ' · ' + h(range(u.from, u.to)) + '</p><h1>المقارنات</h1></div>';
     if (!list.length) return html + '<section class="panel empty"><p>لا جداول مقارنة في هذه الوحدة.</p></section>';
-    var i = route.params.c != null ? parseInt(route.params.c, 10) : (CMPI[u.id] || 0);
+    var i = route.params.c != null ? parseInt(route.params.c, 10) : (CMPI[u.id] != null ? CMPI[u.id] : (parseInt(recall('cmp:' + u.id), 10) || 0));
     if (!(i >= 0 && i < list.length)) i = 0;
     CMPI[u.id] = i;
+    remember('cmp:' + u.id, i);
     var X = list[i], c = X.c;
     var tk = c.topic != null ? X.unit.id + ':' + c.topic : null;
     var qn = tk ? QS.filter(function (q) { return topicKeyOf(q) === tk; }).length : 0;
-    html += '<div class="toolbar"><div class="field" style="flex:1 1 280px"><label for="cmpsel">الجدول</label><select id="cmpsel" data-change="cmpsel" data-unit="' + u.id + '">' +
+    html += '<div class="toolbar"><div class="field" style="flex:1 1 280px"><label for="cmpsel">الجدول</label><select id="cmpsel" data-mem="cmp:' + u.id + '" data-change="cmpsel" data-unit="' + u.id + '">' +
       list.map(function (x, j) { return '<option value="' + j + '"' + (j === i ? ' selected' : '') + '>' + h((u.id === 'all' ? x.unit.name + ': ' : '') + x.c.title) + '</option>'; }).join('') + '</select></div></div>' +
       '<div class="btnrow" style="margin:0 0 6px"><button type="button" class="btn btn-primary" data-act="cmpstep" data-unit="' + u.id + '" data-d="-1"' + (i === 0 ? ' disabled' : '') + '>' + icon('prev') + 'المقارنة السابقة</button>' +
       '<button type="button" class="btn btn-primary" data-act="cmpstep" data-unit="' + u.id + '" data-d="1"' + (i >= list.length - 1 ? ' disabled' : '') + '>المقارنة التالية' + icon('next') + '</button>' +
@@ -774,7 +792,7 @@
     if (!list.length) return html + '<section class="panel"><p class="read">لا تتضمن هذه الوحدة حواشي تراجم؛ فهي تجمع رواد النظريات الذين وردت تراجمهم في الوحدات السابقة. تجدهم جميعًا في <a href="#figures">صفحة الأعلام العامة</a>.</p></section>';
     return html + '<section class="panel">' + figTable(list, u.id === 'all') + '</section>';
   };
-  var FIG = { q: '', unit: '' };
+  var FIG = { q: '', unit: recall('figu') || '' };
   PAGES.figures = function () {
     var all = figuresOf('all');
     var norm = function (s) { return String(s).replace(/[ً-ْ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').toLowerCase(); };
@@ -786,7 +804,7 @@
     });
     return '<div class="pagehead"><p class="eyebrow">' + h(C.reference) + '</p><h1>الأعلام والنظريات</h1><p class="read">' + h(C.figNote) + '</p></div>' +
       '<div class="toolbar"><div class="field" style="flex:1 1 240px"><label for="figq">ابحث</label><input type="search" id="figq" value="' + esc(FIG.q) + '" data-input="figq" placeholder="اسم علم أو نظرية" autocomplete="off"></div>' +
-      '<div class="field"><label for="figu">الوحدة</label><select id="figu" data-change="figu"><option value="">كل الوحدات</option>' +
+      '<div class="field"><label for="figu">الوحدة</label><select id="figu" data-mem="figu" data-change="figu"><option value="">كل الوحدات</option>' +
       UNITS.filter(function (u) { return (u.figures || []).length; }).map(function (u) { return '<option value="' + u.id + '"' + (FIG.unit === u.id ? ' selected' : '') + '>' + h(u.name) + '</option>'; }).join('') + '</select></div></div>' +
       '<p class="small" role="status" id="figcount">النتائج: ' + h(list.length) + ' من ' + h(all.length) + '</p>' +
       '<div id="figtable">' + (list.length ? figTable(list, true) : '<section class="panel empty"><p>لا نتائج.</p></section>') + '</div>';
@@ -1089,6 +1107,7 @@
   };
   document.addEventListener('change', function (e) {
     var el = e.target.closest('[data-change]');
+    if (el && el.tagName === 'SELECT' && el.dataset.mem) remember(el.dataset.mem, el.value);
     if (el && CHG[el.dataset.change]) CHG[el.dataset.change](el);
   });
   document.addEventListener('input', function (e) {
