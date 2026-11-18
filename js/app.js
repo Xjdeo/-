@@ -338,7 +338,7 @@
     var cards = order.map(function (u) {
       var s = stats(u.id), isFav = fav.indexOf(u.id) >= 0, lt = last[u.id];
       return '<article class="ucard"><div class="ucard-top"><span class="ubadge" aria-hidden="true">' + h(u.number) + '</span>' +
-        '<div style="min-width:0"><p class="eyebrow" style="margin:0">' + h(u.name) + ' · ' + h(range(u.from, u.to)) + '</p>' +
+        '<div style="min-width:0"><p class="eyebrow" style="margin:0">' + h(u.name) + '<span class="small">' + h(range(u.from, u.to)) + '</span></p>' +
         '<h3><a href="#unit-' + u.id + '-home">' + h(u.title) + '</a></h3></div>' +
         '<button type="button" class="star" data-act="fav" data-unit="' + u.id + '" aria-pressed="' + isFav + '" aria-label="تثبيت ' + h(u.name) + ' في الأعلى">' + icon('star') + '</button></div>' +
         '<progress max="' + s.total + '" value="' + s.answered + '" aria-label="إنجاز ' + h(u.name) + '"></progress>' +
@@ -883,7 +883,17 @@
   UNIT_TABS.summary = function (u) {
     var topics = topicsOf(u.id);
     var inFrame = false; try { inFrame = window.self !== window.top; } catch (e) { inFrame = true; }
-    var html = '<div class="printhead">مسار · ' + h(C.title) + ' — ' + h(u.name) + ' · ' + h(C.reference) + ' ' + h(range(u.from, u.to)) + '</div>' +
+    var nodesN = topics.reduce(function (n, T) { return n + T.t.nodes.length; }, 0);
+    var qN = qidsOf(u.id).length, now = new Date();
+    var cover = '<div class="printcover" aria-hidden="true"><p class="pc-brand">مسار</p>' +
+      '<p class="pc-book">' + h(C.bookTitle) + ' — الفصل السابع</p>' +
+      '<h1>' + h(C.title) + '</h1>' +
+      '<p class="pc-unit">' + h(u.id === 'all' ? 'خلاصة الفصل كاملًا' : 'خلاصة ' + u.name + ': ' + u.title) + '</p>' +
+      '<p class="pc-range">النطاق في المذكرة: ' + h(range(u.from, u.to)) + '</p>' +
+      '<dl><dt>المحاور</dt><dd>' + h(topics.length) + '</dd><dt>العقد</dt><dd>' + h(nodesN) + '</dd><dt>أسئلة التدريب</dt><dd>' + h(qN) + '</dd>' +
+      '<dt>المؤلف</dt><dd>' + h(C.author) + '</dd><dt>تاريخ الطباعة</dt><dd>' + h(now.getDate() + '/' + (now.getMonth() + 1) + '/' + now.getFullYear()) + '</dd></dl>' +
+      '<p class="pc-note">النصوص بين علامتي التنصيص منقولة من المذكرة، وأرقام الصفحات هي الأرقام المطبوعة عليها. هذه الخلاصة أداة مراجعة ذاتية، وليست بديلًا عن المذكرة.</p></div>';
+    var html = cover + '<div class="printhead">مسار · ' + h(C.title) + ' — ' + h(u.name) + ' · ' + h(C.reference) + ' ' + h(range(u.from, u.to)) + '</div>' +
       '<div class="pagehead"><p class="eyebrow">' + h(u.name) + ' · ' + h(range(u.from, u.to)) + '</p><h1>خلاصة ' + h(u.id === 'all' ? 'الفصل' : u.name) + '</h1>' +
       '<p class="read">كل محور بعُقده ومفتاح استرجاعه، بترتيب المذكرة. النصوص بين علامتي التنصيص منقولة من المذكرة.</p></div>' +
       (inFrame ? '' : '<div class="btnrow noprint" style="margin:0 0 10px"><button type="button" class="btn" data-act="print">' + icon('print') + 'طباعة الخلاصة</button></div>');
