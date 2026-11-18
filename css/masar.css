@@ -465,3 +465,7 @@ table.t.zebra tbody tr:hover{background:var(--tint-2)}
   .mhead{display:none}
   .mrow{grid-template-columns:minmax(0,1fr)}
 }
+
+.dex{margin-top:14px}
+.dsum{margin:0;font-size:.92rem;color:var(--muted)}
+.dsum b{color:var(--navy);font-size:1.05rem}

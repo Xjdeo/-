@@ -268,6 +268,38 @@
   function bar(cls, val, label) {
     return '<div class="dbar ' + cls + '" role="img" aria-label="' + h(label) + '" title="' + h(label) + '"><span style="width:' + Math.max(0, Math.min(100, val)) + '%"></span></div>';
   }
+  function exStats(uid, type) {
+    var list = exercisesOf(uid, type), res = drillResults();
+    var tried = list.filter(function (x) { return res[x.id]; });
+    var full = tried.filter(function (x) { return res[x.id].best === res[x.id].total; });
+    return { list: list, total: list.length, tried: tried.length, full: full.length };
+  }
+  function exUnitLine(uid) { var e = exStats(uid); return e.total ? ' · تمارين ' + h(e.tried) + ' من ' + h(e.total) : ''; }
+  function exerciseBlock() {
+    var all = exStats('all'), o = exStats('all', 'order'), m = exStats('all', 'match'), res = drillResults();
+    var row = function (label, kind, e) {
+      var lbl = label + ': حللت ' + e.tried + ' من ' + e.total + '، كاملًا ' + e.full;
+      return '<a class="drow" href="#unit-all-' + kind + '"><span class="drow-l"><b>' + h(label) + '</b><span>في الوحدات كلها</span></span>' +
+        '<span class="drow-b">' + bar('done', pct(e.tried, e.total), lbl) +
+        '<span class="drow-t">حللت ' + h(e.tried) + ' من ' + h(e.total) + ' · حللت ' + h(e.full) + ' منها حلًّا كاملًا</span></span></a>';
+    };
+    var next = null, nextKind = null;
+    UNITS.some(function (u) {
+      return ['order', 'match'].some(function (k) {
+        var x = exercisesOf(u.id, k).filter(function (e) { return !res[e.id]; })[0];
+        if (x) { next = x; nextKind = k; return true; } return false;
+      });
+    });
+    var nextHtml = '';
+    if (next) {
+      var idx = exercisesOf(next.unit, nextKind).indexOf(next);
+      nextHtml = '<p class="small" style="margin:8px 0 0">التمرين التالي غير المحلول: <a href="#unit-' + next.unit + '-' + nextKind + '?d=' + idx + '">' + h(next.title) + '</a> (' + h(unitById[next.unit].name) + ').</p>';
+    } else if (all.total) nextHtml = '<p class="small" style="margin:8px 0 0">حللت التمارين كلها مرة على الأقل.' + (all.full < all.total ? ' أعد ما لم تحله كاملًا: ' + h(all.total - all.full) + '.' : '') + '</p>';
+    return '<div class="dchart dex"><div class="dchart-head"><h3>تمارين الترتيب والتوصيل</h3>' +
+      '<p class="dsum">حللت <b>' + h(all.tried) + '</b> من ' + h(all.total) + ' تمرينًا · حلًّا كاملًا: <b>' + h(all.full) + '</b></p></div>' +
+      row('تمارين الترتيب', 'order', o) + row('تمارين التوصيل', 'match', m) + nextHtml +
+      '<p class="small" style="margin:4px 0 0">«حللت» = تحققت من التمرين مرة على الأقل؛ «حلًّا كاملًا» = أفضل نتيجة لك فيه كل العناصر صحيحة. لا تدخل التمارين في نسب الإنجاز والدقة أعلاه.</p></div>';
+  }
   function progressDashboard() {
     var all = stats('all'), ids = qidsOf('all'), due = dueIds(ids).length, a = answers();
     var mastered = UNITS.filter(function (u) { return stats(u.id).mastered; }).length;
@@ -288,7 +320,7 @@
         var accL = st.answered ? 'دقة ' + u.name + ': ' + st.acc + '٪ (' + st.right + ' من ' + st.answered + ')' : 'دقة ' + u.name + ': لم تُجب بعد';
         return '<a class="drow" href="#unit-' + u.id + '-home"><span class="drow-l"><b>' + h(u.name) + '</b><span>' + h(u.title) + '</span></span>' +
           '<span class="drow-b">' + bar('done', st.done, doneL) + bar('acc', st.answered ? st.acc : 0, accL) +
-          '<span class="drow-t">إنجاز ' + h(st.done) + '٪ (' + h(st.answered) + ' من ' + h(st.total) + ') · دقة ' + (st.answered ? h(st.acc) + '٪' : '—') + (st.mastered ? ' · متقنة' : '') + '</span></span></a>';
+          '<span class="drow-t">إنجاز ' + h(st.done) + '٪ (' + h(st.answered) + ' من ' + h(st.total) + ') · دقة ' + (st.answered ? h(st.acc) + '٪' : '—') + (st.mastered ? ' · متقنة' : '') + exUnitLine(u.id) + '</span></span></a>';
       }).join('') + '</div>';
     /* المحاور */
     var tstats = topicsOf('all').map(function (T) {
@@ -296,6 +328,7 @@
       var ans = qs.filter(function (q) { return a[q.id]; }), right = ans.filter(function (q) { return a[q.id].ok; }).length;
       return { T: T, total: qs.length, answered: ans.length, right: right, acc: pct(right, ans.length) };
     }).filter(function (x) { return x.total > 0; });
+    html += exerciseBlock();
     var weak = tstats.filter(function (x) { return x.answered >= 2 && x.acc < 80; }).sort(function (x, y) { return x.acc - y.acc || y.answered - x.answered; }).slice(0, 3);
     var untouched = tstats.filter(function (x) { return x.answered === 0; }).length;
     html += '<div class="dsplit"><div><h3>محاور تحتاج مراجعة</h3>' +
