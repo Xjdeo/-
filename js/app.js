@@ -169,7 +169,8 @@
   var TABS = [
     { id: 'home', label: 'ابدأ من هنا', icon: 'home' },
     { id: 'practice', label: 'التدريب الموضوعي', icon: 'list' },
-    { id: 'drills', label: 'الترتيب والتوصيل', icon: 'drill' },
+    { id: 'order', label: 'تمارين الترتيب', icon: 'drill' },
+    { id: 'match', label: 'تمارين التوصيل', icon: 'match' },
     { id: 'exam', label: 'محاكاة الاختبار', icon: 'clock' },
     { id: 'maps', label: 'خرائط المفاهيم', icon: 'map' },
     { id: 'compare', label: 'المقارنات', icon: 'table' },
@@ -181,7 +182,8 @@
     var raw = decodeURIComponent(location.hash.slice(1) || '');
     var parts = raw.split('?'), path = parts[0], params = {};
     (parts[1] || '').split('&').forEach(function (kv) { if (!kv) return; var p = kv.split('='); params[p[0]] = p.slice(1).join('='); });
-    var m = /^unit-(u\d+|all)-(home|practice|drills|exam|maps|compare|figures|summary)$/.exec(path);
+    var m = /^unit-(u\d+|all)-(home|practice|order|match|drills|exam|maps|compare|figures|summary)$/.exec(path);
+    if (m && m[2] === 'drills') m[2] = 'order';
     if (m && getUnit(m[1])) return { page: 'unit', unit: m[1], tab: m[2], params: params, path: path };
     if (['course', 'bank', 'mock', 'figures', 'about', 'welcome'].indexOf(path) >= 0) return { page: path, params: params, path: path };
     if (!path) return { page: store.get('skipWelcome', false) ? 'course' : 'welcome', params: params, path: '' };
@@ -228,7 +230,7 @@
   function hasFigures(uid) { return figuresOf(uid).length > 0; }
   function renderSide() {
     var u = getUnit(route.unit), st = stats(u.id);
-    var tabs = TABS.filter(function (t) { return t.id !== 'figures' || hasFigures(u.id); });
+    var tabs = TABS.filter(function (t) { return (t.id !== 'figures' || hasFigures(u.id)) && ((t.id !== 'order' && t.id !== 'match') || exercisesOf(u.id, t.id).length); });
     var items = tabs.map(function (t) {
       var cur = t.id === route.tab ? ' aria-current="page"' : '';
       return '<li><a href="#unit-' + u.id + '-' + t.id + '"' + cur + '>' + icon(t.icon) + '<span>' + h(t.label) + '</span></a></li>';
@@ -393,7 +395,8 @@
         (wrong ? '' : '<li>' + (st.answered ? 'لا أخطاء مسجلة في هذه الوحدة.' : 'لا أخطاء مسجلة؛ لم تُجب عن أسئلة هذه الوحدة بعد.') + '</li>') + '</ul>' : '') +
       '</section>';
     html += '<section class="panel"><h2>أنشطة المراجعة</h2><div class="btnrow">' +
-      '<a class="btn" href="#unit-' + u.id + '-drills">' + icon('drill') + 'الترتيب والتوصيل (' + h(exercisesOf(u.id).length) + ')</a>' +
+      (exercisesOf(u.id, 'order').length ? '<a class="btn" href="#unit-' + u.id + '-order">' + icon('drill') + 'تمارين الترتيب (' + h(exercisesOf(u.id, 'order').length) + ')</a>' : '') +
+      (exercisesOf(u.id, 'match').length ? '<a class="btn" href="#unit-' + u.id + '-match">' + icon('match') + 'تمارين التوصيل (' + h(exercisesOf(u.id, 'match').length) + ')</a>' : '') +
       '<a class="btn" href="#unit-' + u.id + '-maps">' + icon('map') + 'خرائط المفاهيم</a>' +
       '<a class="btn" href="#unit-' + u.id + '-compare">' + icon('table') + 'المقارنات</a>' +
       (figs ? '<a class="btn" href="#unit-' + u.id + '-figures">' + icon('person') + 'الأعلام والنظريات</a>' : '') +
@@ -732,7 +735,7 @@
 
   /* ───────────── تمارين الترتيب والتوصيل ───────────── */
   var EX = M.exercises || [];
-  function exercisesOf(uid) { return EX.filter(function (x) { return uid === 'all' || x.unit === uid; }); }
+  function exercisesOf(uid, type) { return EX.filter(function (x) { return (uid === 'all' || x.unit === uid) && (!type || x.type === type); }); }
   var DR = {};      /* حالة كل تمرين في الذاكرة: {order:[], picks:{}, checked:bool, opts:[]} */
   var DRI = {};
   function drillResults() { return store.get('drills', {}); }
@@ -794,24 +797,30 @@
     return '<div class="mhead" aria-hidden="true"><span>' + h(x.left) + '</span><span>' + h(x.right) + '</span></div><div class="mlist">' + rows + '</div>';
   }
 
-  UNIT_TABS.drills = function (u) {
-    var list = exercisesOf(u.id), res = drillResults();
-    var html = '<div class="pagehead"><p class="eyebrow">' + h(u.name) + ' · ' + h(range(u.from, u.to)) + '</p><h1>الترتيب والتوصيل</h1>' +
-      '<p class="read">تمارين مبنية على التسلسلات والجداول في المذكرة. لا يظهر التصحيح قبل أن تضغط «تحقق». نتائجها تُحفظ مستقلة، ولا تدخل في إحصاءات الأسئلة.</p></div>';
-    if (!list.length) return html + '<section class="panel empty"><p>لا تمارين في هذه الوحدة.</p></section>';
-    var i = route.params.d != null ? parseInt(route.params.d, 10) : (DRI[u.id] != null ? DRI[u.id] : (parseInt(recall('drill:' + u.id), 10) || 0));
+  UNIT_TABS.order = function (u) { return drillsPage(u, 'order'); };
+  UNIT_TABS.match = function (u) { return drillsPage(u, 'match'); };
+  function drillsPage(u, kind) {
+    var list = exercisesOf(u.id, kind), res = drillResults(), key = kind + ':' + u.id;
+    var isOrder = kind === 'order';
+    var html = '<div class="pagehead"><p class="eyebrow">' + h(u.name) + ' · ' + h(range(u.from, u.to)) + '</p><h1>' + (isOrder ? 'تمارين الترتيب' : 'تمارين التوصيل') + '</h1>' +
+      '<p class="read">' + (isOrder
+        ? 'رتّب عناصر كل تسلسل كما ورد في المذكرة، بزرّي أعلى وأسفل.'
+        : 'صِل كل عنصر بما يقابله في المذكرة، باختيار المقابل من القائمة.') +
+      ' لا يظهر التصحيح قبل أن تضغط «تحقق». النتائج تُحفظ مستقلة، ولا تدخل في إحصاءات الأسئلة.</p></div>';
+    if (!list.length) return html + '<section class="panel empty"><p>' + (isOrder ? 'لا تمارين ترتيب في هذه الوحدة؛ لا يتضمن محتواها تسلسلًا مرتبًا. جرّب ' : 'لا تمارين توصيل في هذه الوحدة. جرّب ') + '<a href="#unit-' + u.id + '-' + (isOrder ? 'match">تمارين التوصيل' : 'order">تمارين الترتيب') + '</a>.</p></section>';
+    var i = route.params.d != null ? parseInt(route.params.d, 10) : (DRI[key] != null ? DRI[key] : (parseInt(recall('drill:' + key), 10) || 0));
     if (!(i >= 0 && i < list.length)) i = 0;
-    DRI[u.id] = i; remember('drill:' + u.id, i);
+    DRI[key] = i; remember('drill:' + key, i);
     var x = list[i], st = drState(x), total = drillTotal(x);
     var done = list.filter(function (e) { return res[e.id]; }).length;
-    html += '<div class="toolbar"><div class="field" style="flex:1 1 300px"><label for="drsel">التمرين</label><select id="drsel" data-mem="drill:' + u.id + '" data-change="drsel" data-unit="' + u.id + '">' +
+    html += '<div class="toolbar"><div class="field" style="flex:1 1 300px"><label for="drsel">التمرين</label><select id="drsel" data-mem="drill:' + key + '" data-change="drsel" data-unit="' + u.id + '" data-kind="' + kind + '">' +
       list.map(function (e, j) {
         var r = res[e.id];
-        return '<option value="' + j + '"' + (j === i ? ' selected' : '') + '>' + h((e.type === 'order' ? 'ترتيب: ' : 'توصيل: ') + (u.id === 'all' ? unitById[e.unit].name + ' — ' : '') + e.title + (r ? ' (آخر نتيجة ' + r.last + ' من ' + r.total + ')' : '')) + '</option>';
+        return '<option value="' + j + '"' + (j === i ? ' selected' : '') + '>' + h(ar(j + 1) + '. ' + (u.id === 'all' ? unitById[e.unit].name + ' — ' : '') + e.title + (r ? ' (آخر نتيجة ' + r.last + ' من ' + r.total + ')' : '')) + '</option>';
       }).join('') + '</select></div></div>' +
-      '<p class="small" style="margin:-6px 0 8px">حللت ' + h(done) + ' من ' + h(list.length) + ' تمارين مرة على الأقل.</p>' +
-      '<div class="btnrow" style="margin:0 0 6px"><button type="button" class="btn btn-primary" data-act="drstep" data-unit="' + u.id + '" data-d="-1"' + (i === 0 ? ' disabled' : '') + '>' + icon('prev') + 'التمرين السابق</button>' +
-      '<button type="button" class="btn btn-primary" data-act="drstep" data-unit="' + u.id + '" data-d="1"' + (i >= list.length - 1 ? ' disabled' : '') + '>التمرين التالي' + icon('next') + '</button></div>';
+      '<p class="small" style="margin:-6px 0 8px">حللت ' + h(done) + ' من ' + h(list.length) + ' مرة على الأقل.</p>' +
+      '<div class="btnrow" style="margin:0 0 6px"><button type="button" class="btn btn-primary" data-act="drstep" data-unit="' + u.id + '" data-kind="' + kind + '" data-d="-1"' + (i === 0 ? ' disabled' : '') + '>' + icon('prev') + 'التمرين السابق</button>' +
+      '<button type="button" class="btn btn-primary" data-act="drstep" data-unit="' + u.id + '" data-kind="' + kind + '" data-d="1"' + (i >= list.length - 1 ? ' disabled' : '') + '>التمرين التالي' + icon('next') + '</button></div>';
     var r = res[x.id];
     html += '<section class="panel"><div class="qhead"><span class="counter">' + (x.type === 'order' ? 'ترتيب' : 'توصيل') + ' · ' + h(itemWord(total)) + '</span>' +
       '<span class="qmeta"><span>' + h(unitById[x.unit].name) + '</span>' + (r ? '<span>أفضل نتيجة: ' + h(r.best) + ' من ' + h(r.total) + '</span>' : '') + '</span></div>' +
@@ -829,7 +838,7 @@
       html += '<div class="btnrow">' + drillPagesBtns(x) +
         (x.topic != null ? '<a class="btn btn-sm" href="#unit-' + x.unit + '-maps?t=' + x.topic + '">' + icon('map') + 'خريطة المحور</a>' : '') +
         '<button type="button" class="btn btn-sm" data-act="drreset" data-x="' + x.id + '">أعد التمرين</button>' +
-        (i < list.length - 1 ? '<button type="button" class="btn btn-sm btn-primary" data-act="drstep" data-unit="' + u.id + '" data-d="1">التمرين التالي</button>' : '') +
+        (i < list.length - 1 ? '<button type="button" class="btn btn-sm btn-primary" data-act="drstep" data-unit="' + u.id + '" data-kind="' + kind + '" data-d="1">التمرين التالي</button>' : '') +
         '</div></div>';
     }
     html += '</section>';
@@ -1260,7 +1269,7 @@
       render(false); var fb = document.getElementById('drfb'); if (fb) fb.focus();
     },
     drreset: function (el) { var x = EX.filter(function (e) { return e.id === el.dataset.x; })[0]; drState(x, true); render(false); var t = document.getElementById('drt'); if (t) t.focus(); },
-    drstep: function (el) { var u = el.dataset.unit, i = (DRI[u] || 0) + parseInt(el.dataset.d, 10); go('#unit-' + u + '-drills?d=' + i); },
+    drstep: function (el) { var u = el.dataset.unit, k = el.dataset.kind, i = (DRI[k + ':' + u] || 0) + parseInt(el.dataset.d, 10); go('#unit-' + u + '-' + k + '?d=' + i); },
     mapstep: function (el) { var u = el.dataset.unit, ti = (MAPOPEN[u + ':t'] || 0) + parseInt(el.dataset.d, 10); go('#unit-' + u + '-maps?t=' + ti); },
     cmpstep: function (el) { var u = el.dataset.unit, i = (CMPI[u] || 0) + parseInt(el.dataset.d, 10); go('#unit-' + u + '-compare?c=' + i); },
     print: function () { window.print(); },
@@ -1310,7 +1319,7 @@
     mockn: function (el) { MOCK.n = parseInt(el.value, 10); },
     revu: function (el) { REV.unit = el.value; rerenderKeep('#revu'); },
     mapsel: function (el) { go('#unit-' + el.dataset.unit + '-maps?t=' + el.value); },
-    drsel: function (el) { go('#unit-' + el.dataset.unit + '-drills?d=' + el.value); },
+    drsel: function (el) { go('#unit-' + el.dataset.unit + '-' + el.dataset.kind + '?d=' + el.value); },
     mpick: function (el) {
       var x = EX.filter(function (e) { return e.id === el.dataset.x; })[0], st = drState(x), i = parseInt(el.dataset.i, 10);
       if (el.value === '') delete st.picks[i]; else st.picks[i] = parseInt(el.value, 10);
