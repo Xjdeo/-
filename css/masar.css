@@ -440,3 +440,28 @@ table.t.zebra tbody tr:hover{background:var(--tint-2)}
   .dsplit{grid-template-columns:1fr}
 }
 @media print{.dbar span{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* ── الترتيب والتوصيل ── */
+.drtitle{font-size:1.25rem;margin:4px 0 6px}
+.ordlist{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ordrow{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--r-s);padding:8px 10px 8px 8px;background:var(--surface)}
+.ordnum{width:30px;height:30px;border-radius:50%;background:var(--sunken);color:var(--navy);font-weight:700;display:grid;place-items:center;flex:none;font-size:.9rem}
+.ordtext{flex:1;min-width:0;font-size:1.02rem;line-height:1.7}
+.ordbtns{display:flex;gap:4px;flex:none}
+.ordbtns .iconbtn{border-color:var(--line);width:38px;height:38px}
+.ordbtns .iconbtn[disabled]{opacity:.35;cursor:default}
+.ordrow .tag,.mrow .tag{font-size:.8rem;font-weight:600;white-space:nowrap}
+.ordrow.is-right,.mrow.is-right{border-color:var(--good);background:var(--good-bg)}
+.ordrow.is-wrong,.mrow.is-wrong{border-color:var(--bad);background:var(--bad-bg)}
+.is-right .tag{color:var(--good)} .is-wrong .tag{color:var(--bad)}
+.mhead{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:12px;font-size:.84rem;font-weight:700;color:var(--muted);margin:12px 0 6px;padding:0 12px}
+.mlist{display:flex;flex-direction:column;gap:8px}
+.mrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-s);padding:10px 12px;background:var(--surface)}
+.mleft{font-weight:600;color:var(--navy);line-height:1.6}
+.mright{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mright select{width:100%}
+.mright .tag{white-space:normal}
+@media (max-width:560px){
+  .mhead{display:none}
+  .mrow{grid-template-columns:minmax(0,1fr)}
+}

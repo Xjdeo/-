@@ -14,7 +14,7 @@ const ctx = { window: {} };
 ctx.window.MASAR = {};
 ctx.MASAR = ctx.window.MASAR;
 vm.createContext(ctx);
-for (const f of ['data/course.js', 'data/questions.js', 'data/notes.js']) {
+for (const f of ['data/course.js', 'data/questions.js', 'data/notes.js', 'data/exercises.js']) {
   vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 }
 const M = ctx.MASAR;
@@ -132,6 +132,33 @@ if (correctIsLongest / total > 0.4) warn(`الخيار الصحيح هو الأ�
 (M.audit || []).forEach((a, i) => { if (!(a.page >= first && a.page <= last)) err(`audit${i}: صفحة غير صالحة`); checkText(`audit${i}`, a.text); });
 (M.refs || []).forEach((r) => r.pages.forEach((p) => { if (!validPage(p)) err(`ref ${r.cite}: صفحة غير صالحة ${p}`); }));
 
+/* التمارين */
+const exIds = new Set();
+const exPerUnit = {};
+(M.exercises || []).forEach((x) => {
+  const l = x.id;
+  if (exIds.has(l)) err(`${l}: معرّف تمرين مكرر`); exIds.add(l);
+  if (!unitIds.has(x.unit)) err(`${l}: وحدة غير موجودة`);
+  const u = M.units.find((y) => y.id === x.unit);
+  if (x.topic != null && u && !u.topics[x.topic]) err(`${l}: محور غير موجود`);
+  (x.pages || [x.page]).concat([x.page]).forEach((p) => { if (!validPage(p)) err(`${l}: صفحة غير صالحة ${p}`); });
+  [x.title, x.prompt].forEach((t) => checkText(l, t));
+  if (x.type === 'order') {
+    if (!Array.isArray(x.items) || x.items.length < 3) err(`${l}: تمرين ترتيب يحتاج ثلاثة عناصر على الأقل`);
+    else if (new Set(x.items).size !== x.items.length) err(`${l}: عناصر مكررة`);
+    (x.items || []).forEach((t) => checkText(l, t));
+  } else if (x.type === 'match') {
+    if (!Array.isArray(x.pairs) || x.pairs.length < 3) err(`${l}: تمرين توصيل يحتاج ثلاثة أزواج على الأقل`);
+    else {
+      if (new Set(x.pairs.map((p) => p[0])).size !== x.pairs.length) err(`${l}: عناصر يمنى مكررة`);
+      if (new Set(x.pairs.map((p) => p[1])).size !== x.pairs.length) err(`${l}: مقابلات مكررة؛ يصبح التصحيح ملتبسًا`);
+    }
+    (x.pairs || []).forEach((p) => p.forEach((t) => checkText(l, t)));
+  } else err(`${l}: نوع غير معروف ${x.type}`);
+  exPerUnit[x.unit] = (exPerUnit[x.unit] || 0) + 1;
+});
+unitIds.forEach((id) => { if (!exPerUnit[id]) warn(`${id}: لا تمارين ترتيب أو توصيل`); });
+
 /* التقرير */
 console.log('مسار — تقرير الفحص');
 console.log(`الوحدات: ${M.units.length}  المحاور: ${M.units.reduce((a, u) => a + u.topics.length, 0)}  العقد: ${nodeCount}`);
@@ -141,6 +168,7 @@ console.log(`مواضع الإجابة الصحيحة (أ/ب/ج/د): ${pos.join(
 console.log(`التصنيفات: ${JSON.stringify(cats)}`);
 console.log(`الخيار الصحيح هو الأطول (أو مساوٍ للأطول) في ${correctIsLongest} من ${total}`);
 const allTopics = M.units.reduce((a, u) => a + u.topics.length, 0);
+console.log(`التمارين: ${(M.exercises || []).length}  لكل وحدة: ${JSON.stringify(exPerUnit)}`);
 console.log(`محاور ممثلة في البنك: ${Object.keys(topicsHit).length} من ${allTopics}`);
 warns.forEach((w) => console.log('تنبيه: ' + w));
 errors.forEach((e) => console.log('خطأ: ' + e));
