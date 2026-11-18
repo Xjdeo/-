@@ -260,6 +260,70 @@
       '<label class="check"><input type="checkbox" data-change="skipWelcome"' + (store.get('skipWelcome', false) ? ' checked' : '') + '> تجاوز هذه الصفحة في الزيارات القادمة</label></section>';
   };
 
+
+  /* — لوحة التقدم — */
+  function bar(cls, val, label) {
+    return '<div class="dbar ' + cls + '" role="img" aria-label="' + h(label) + '" title="' + h(label) + '"><span style="width:' + Math.max(0, Math.min(100, val)) + '%"></span></div>';
+  }
+  function progressDashboard() {
+    var all = stats('all'), ids = qidsOf('all'), due = dueIds(ids).length, a = answers();
+    var mastered = UNITS.filter(function (u) { return stats(u.id).mastered; }).length;
+    var tile = function (label, big, sub) { return '<div class="kpi"><p class="kpi-l">' + h(label) + '</p><p class="kpi-v">' + big + '</p><p class="kpi-s">' + sub + '</p></div>'; };
+    var html = '<section class="panel dash" aria-labelledby="dashT"><h2 id="dashT">لوحة التقدم</h2>' +
+      '<p class="small">تُحسب من آخر إجابة لك عن كل سؤال في التدريب وبنك الأسئلة؛ ولا تدخل فيها محاولات الاختبار. <a href="#about">معنى المؤشرات</a></p>' +
+      '<div class="kpis">' +
+      tile('إنجاز المقرر', h(all.done) + '٪', 'أجبت عن ' + h(all.answered) + ' من ' + h(qWord(all.total))) +
+      tile('دقة الإجابات', all.answered ? h(all.acc) + '٪' : '—', all.answered ? h(all.right) + ' صحيحة من ' + h(all.answered) : 'تظهر بعد أول إجابة') +
+      tile('وحدات متقنة', h(mastered), 'من ' + h(UNITS.length) + ' وحدات (كل الأسئلة، و٨٠٪ فأكثر)') +
+      tile('مراجعة اليوم', h(due), due ? '<a href="#unit-all-practice?set=due">ابدأ المراجعة</a>' : 'لا أسئلة مستحقة الآن') +
+      '</div>';
+    /* لكل وحدة */
+    html += '<div class="dchart"><div class="dchart-head"><h3>الإنجاز والدقة لكل وحدة</h3><p class="dlegend"><span><i class="sw sw-done"></i>الإنجاز</span><span><i class="sw sw-acc"></i>الدقة</span></p></div>' +
+      UNITS.map(function (u) {
+        var st = stats(u.id);
+        var doneL = 'إنجاز ' + u.name + ': ' + st.done + '٪ (' + st.answered + ' من ' + st.total + ')';
+        var accL = st.answered ? 'دقة ' + u.name + ': ' + st.acc + '٪ (' + st.right + ' من ' + st.answered + ')' : 'دقة ' + u.name + ': لم تُجب بعد';
+        return '<a class="drow" href="#unit-' + u.id + '-home"><span class="drow-l"><b>' + h(u.name) + '</b><span>' + h(u.title) + '</span></span>' +
+          '<span class="drow-b">' + bar('done', st.done, doneL) + bar('acc', st.answered ? st.acc : 0, accL) +
+          '<span class="drow-t">إنجاز ' + h(st.done) + '٪ (' + h(st.answered) + ' من ' + h(st.total) + ') · دقة ' + (st.answered ? h(st.acc) + '٪' : '—') + (st.mastered ? ' · متقنة' : '') + '</span></span></a>';
+      }).join('') + '</div>';
+    /* المحاور */
+    var tstats = topicsOf('all').map(function (T) {
+      var qs = QS.filter(function (q) { return topicKeyOf(q) === T.key; });
+      var ans = qs.filter(function (q) { return a[q.id]; }), right = ans.filter(function (q) { return a[q.id].ok; }).length;
+      return { T: T, total: qs.length, answered: ans.length, right: right, acc: pct(right, ans.length) };
+    }).filter(function (x) { return x.total > 0; });
+    var weak = tstats.filter(function (x) { return x.answered >= 2 && x.acc < 80; }).sort(function (x, y) { return x.acc - y.acc || y.answered - x.answered; }).slice(0, 3);
+    var untouched = tstats.filter(function (x) { return x.answered === 0; }).length;
+    html += '<div class="dsplit"><div><h3>محاور تحتاج مراجعة</h3>' +
+      (weak.length ? '<ul class="dlist">' + weak.map(function (x) {
+        return '<li><a href="#unit-' + x.T.unit.id + '-practice?topic=' + x.T.key + '">' + h(x.T.t.title) + '</a><span class="small"> — ' + h(x.T.unit.name) + ' · دقة ' + h(x.acc) + '٪ (' + h(x.right) + ' من ' + h(x.answered) + ')</span></li>';
+      }).join('') + '</ul>' : '<p class="small">لا محور دقته أقل من ٨٠٪ بين المحاور التي أجبت فيها عن سؤالين أو أكثر.</p>') +
+      '<p class="small">محاور لم تُجب عن أي من أسئلتها: ' + h(untouched) + ' من ' + h(tstats.length) + '.</p></div>';
+    /* المفضلة */
+    var fav = store.get('favs', []).filter(function (id) { return unitById[id]; });
+    html += '<div><h3>الوحدات المفضلة</h3>' + (fav.length ? '<ul class="dlist">' + fav.map(function (id) {
+      var u = unitById[id], st = stats(id);
+      return '<li><a href="#unit-' + id + '-home">' + h(u.name + ': ' + u.title) + '</a><span class="small"> — ' + h(st.done) + '٪ إنجاز</span></li>';
+    }).join('') + '</ul>' : '<p class="small">اضغط النجمة في بطاقة أي وحدة لتظهر هنا للوصول السريع.</p>') + '</div></div>';
+    /* إرشاد */
+    var tip;
+    var next = UNITS.filter(function (u) { return !stats(u.id).mastered; })[0];
+    if (due) tip = 'لديك ' + h(qWord(due)) + ' مستحقة للمراجعة اليوم؛ <a href="#unit-all-practice?set=due">ابدأ بها</a> قبل أسئلة جديدة.';
+    else if (!next) tip = 'أتقنت الوحدات كلها. جرّب <a href="#mock">الاختبار الشامل</a> لتقيس نفسك تحت الوقت.';
+    else {
+      var ns = stats(next.id), w = wrongIds(qidsOf(next.id)).length;
+      if (!ns.answered) tip = 'ابدأ <a href="#unit-' + next.id + '-maps">بخرائط ' + h(next.name) + '</a>، ثم <a href="#unit-' + next.id + '-practice">تدرّب على أسئلتها</a>.';
+      else if (ns.answered < ns.total) tip = 'أكمل أسئلة <a href="#unit-' + next.id + '-practice">' + h(next.name) + '</a>؛ بقي ' + h(qWord(ns.total - ns.answered)) + '.';
+      else tip = 'أجبت عن كل أسئلة ' + h(next.name) + ' ودقتك ' + h(ns.acc) + '٪؛ <a href="#unit-' + next.id + '-practice?set=wrong">راجع أخطاءها (' + h(w) + ')</a> لتبلغ ٨٠٪.';
+    }
+    var last = attempts()[0];
+    html += '<div class="dtip"><h3>إرشاد</h3><p>' + tip + '</p>' +
+      (last ? '<p class="small">آخر محاولة اختبار: ' + h(last.right) + ' من ' + h(last.total) + ' (' + h(pct(last.right, last.total)) + '٪) في ' + h(scopeName(last.scope)) + '. <a href="' + scopeHash(last.scope) + '?result=' + last.id + '">مراجعة الإجابات</a></p>' : '') +
+      '</div></section>';
+    return html;
+  }
+
   /* — صفحة المقرر — */
   PAGES.course = function () {
     var allIds = qidsOf('all'), due = dueIds(allIds).length, fav = store.get('favs', []), last = store.get('last', {});
@@ -290,6 +354,7 @@
       (due ? '<a class="btn btn-big" href="#unit-all-practice?set=due">مراجعة اليوم (' + h(due) + ')</a>' : '') + '</div>' +
       '<div class="stats"><span><b>' + h(UNITS.length) + '</b>وحدات</span><span><b>' + h(QS.length) + '</b>سؤالًا</span><span><b>' + h(st.answered) + '</b>أجبت عنها</span><span><b>' + (st.answered ? h(st.acc) + '٪' : '—') + '</b>الدقة</span></div>' +
       cont + '</div>' +
+      progressDashboard() +
       '<p class="note">' + h(C.unitNote) + '</p>' +
       '<div class="cards">' + cards + '</div>' +
       '<section class="panel"><h2>صفحات عامة</h2><div class="btnrow"><a class="btn" href="#mock">' + icon('clock') + 'الاختبار الشامل</a><a class="btn" href="#figures">' + icon('person') + 'الأعلام والنظريات</a><a class="btn" href="#unit-all-summary">' + icon('sum') + 'خلاصة الفصل كاملة</a><a class="btn" href="#about">' + icon('info') + 'عن هذا الكتاب</a></div></section>';
