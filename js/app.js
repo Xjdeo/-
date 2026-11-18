@@ -227,14 +227,15 @@
   function hasFigures(uid) { return figuresOf(uid).length > 0; }
   function renderSide() {
     var u = getUnit(route.unit), st = stats(u.id);
-    var items = TABS.filter(function (t) { return t.id !== 'figures' || hasFigures(u.id); }).map(function (t) {
+    var tabs = TABS.filter(function (t) { return t.id !== 'figures' || hasFigures(u.id); });
+    var items = tabs.map(function (t) {
       var cur = t.id === route.tab ? ' aria-current="page"' : '';
       return '<li><a href="#unit-' + u.id + '-' + t.id + '"' + cur + '>' + icon(t.icon) + '<span>' + h(t.label) + '</span></a></li>';
     }).join('');
     side.innerHTML =
       '<div class="side-head"><span class="ubadge" aria-hidden="true">' + (u.id === 'all' ? 'م' : h(u.number)) + '</span>' +
       '<div><p class="side-name">' + h(u.name) + '</p><p class="side-sub">' + h(range(u.from, u.to)) + '</p></div></div>' +
-      '<nav aria-label="أنشطة ' + h(u.name) + '"><ul class="actlist">' + items + '</ul></nav>' +
+      '<nav aria-label="أنشطة ' + h(u.name) + '"><ul class="actlist" style="--cols:' + Math.ceil(tabs.length / 2) + '">' + items + '</ul></nav>' +
       '<div class="progbox"><p>الإنجاز: أجبت عن ' + h(st.answered) + ' من ' + h(st.total) + '</p>' +
       '<progress max="' + st.total + '" value="' + st.answered + '" aria-label="نسبة الإنجاز">' + h(st.done) + '٪</progress>' +
       '<p class="small" style="margin-top:.5em">الدقة: ' + (st.answered ? h(st.acc) + '٪' : '—') + (st.mastered ? ' · وحدة متقنة' : '') + '</p>' +
@@ -318,10 +319,13 @@
     if (u.id === 'all') html += '<p class="note">' + h(C.unitNote) + '</p>';
     html += '<section class="panel"><h2>قبل التدريب أو بعده</h2>' +
       '<p class="read">المراجعة المتباعدة تعيد إليك السؤال بعد يوم، ثم يومين، ثم أربعة، ثم ثمانية، ثم ستة عشر يومًا كلما أصبت فيه؛ وإن أخطأت عاد إلى البداية.</p>' +
-      '<div class="btnrow">' +
-      (due ? '<a class="btn btn-primary" href="#unit-' + u.id + '-practice?set=due">مراجعة اليوم (' + h(due) + ')</a>' : '<span class="btn" aria-disabled="true">لا مراجعة مستحقة اليوم</span>') +
-      (wrong ? '<a class="btn" href="#unit-' + u.id + '-practice?set=wrong">راجع أخطاءك (' + h(wrong) + ')</a>' : '<span class="btn" aria-disabled="true">لا أخطاء مسجلة</span>') +
-      '</div></section>';
+      ((due || wrong) ? '<div class="btnrow">' +
+        (due ? '<a class="btn btn-primary" href="#unit-' + u.id + '-practice?set=due">مراجعة اليوم (' + h(due) + ')</a>' : '') +
+        (wrong ? '<a class="btn" href="#unit-' + u.id + '-practice?set=wrong">راجع أخطاءك (' + h(wrong) + ')</a>' : '') + '</div>' : '') +
+      ((!due || !wrong) ? '<ul class="statelist">' +
+        (due ? '' : '<li>لا مراجعة مستحقة اليوم.</li>') +
+        (wrong ? '' : '<li>' + (st.answered ? 'لا أخطاء مسجلة في هذه الوحدة.' : 'لا أخطاء مسجلة؛ لم تُجب عن أسئلة هذه الوحدة بعد.') + '</li>') + '</ul>' : '') +
+      '</section>';
     html += '<section class="panel"><h2>أنشطة المراجعة</h2><div class="btnrow">' +
       '<a class="btn" href="#unit-' + u.id + '-maps">' + icon('map') + 'خرائط المفاهيم</a>' +
       '<a class="btn" href="#unit-' + u.id + '-compare">' + icon('table') + 'المقارنات</a>' +
