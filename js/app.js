@@ -1070,6 +1070,8 @@
 
       '<section class="panel"><h2>ملاحظات التدقيق على نص المذكرة</h2><p class="read">مواضع فيها خطأ طباعي ظاهر أو غموض أو اختلاف في التسمية. نُقل النص في الموقع كما ورد، ولم يُصحَّح شيء بصمت.</p><ul class="read" style="padding-inline-start:1.2em">' + audit + '</ul></section>' +
 
+      ((M.sciNotes || []).length ? '<section class="panel"><h2>ملاحظات علمية من المراجعة التخصصية</h2><p class="note">هذه الملاحظات ليست من المذكرة ولا من مادة المذاكرة، ولم يُعدَّل بسببها شيء في الموقع. هي ما رآه مراجعون من وكلاء الذكاء الاصطناعي، أدّوا دور أساتذة متخصصين، مخالفًا للمتعارف عليه في علم نفس النمو، مع درجة ثقتهم؛ فلم يراجعها متخصص بشري بعد. أجب في الاختبار بما في المذكرة، وراجع أستاذ المقرر إن احتجت.</p><ul class="read" style="padding-inline-start:1.2em">' +
+        M.sciNotes.map(function (x) { return '<li><b>' + h(pg(x.page)) + ' — ثقة ' + h(x.level) + ':</b> ' + h(x.text) + ' ' + srcBtn(x.page, pg(x.page)) + '</li>'; }).join('') + '</ul></section>' : '') +
       '<section class="panel"><h2>مراجع المذكرة</h2><p class="read">' + h(C.refsNote) + '</p><div class="tablewrap"><table class="t stack"><thead><tr><th scope="col">الاستشهاد كما ورد</th><th scope="col">الصفحات</th></tr></thead><tbody>' + refs + '</tbody></table></div></section>' +
 
       '<section class="panel"><h2>صور الصفحات</h2><p class="read">زر «راجع الأصل» يفتح صورة الصفحة المطبوعة نفسها. الصور مأخوذة من الملف المرفق كما هي، وضُغطت لتخفيف حجمها، ودُوّرت ص ٢٦٦ لأنها مقلوبة في الملف. ' + h(C.missingNote) + '</p></section>';

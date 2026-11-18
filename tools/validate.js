@@ -118,7 +118,7 @@ for (const q of Q) {
   if (lens[q.correct] > Math.max(...others) * 1.25 && lens[q.correct] - Math.max(...others) > 8) {
     warn(`${l}: الخيار الصحيح أطول بوضوح من بقية الخيارات`); longestOutliers++;
   }
-  const giveaway = /(فقط|دائمًا|دائما|مسبقًا|مسبقا|إطلاقًا|أبدًا)/;
+  const giveaway = /(^|\s)(فقط|دائمًا|دائما|مسبقًا|مسبقا|إطلاقًا|أبدًا|تمامًا|كليًا|مبكرًا)(?=\s|$|[،.؛])/;
   q.options.forEach((o, i) => { if (i !== q.correct && giveaway.test(o)) warn(`${l}: كلمة كاشفة في مُشتِّت: ${o}`); });
 }
 const total = Q.length;
@@ -154,6 +154,13 @@ const exPerUnit = {};
       if (new Set(x.pairs.map((p) => p[1])).size !== x.pairs.length) err(`${l}: مقابلات مكررة؛ يصبح التصحيح ملتبسًا`);
     }
     (x.pairs || []).forEach((p) => p.forEach((t) => checkText(l, t)));
+    /* كشف الجواب: كلمة من الطرف الأيمن (٤ أحرف فأكثر، بلا «ال») تتكرر في مقابله */
+    const norm = (w) => w.replace(/[«»"()،؛.:\-]/g, '').replace(/^(وال|بال|لل|ال|و|ب)/, '');
+    (x.pairs || []).forEach(([a, b]) => {
+      const aw = new Set(a.split(/\s+/).map(norm).filter((w) => w.length >= 4));
+      const hit = b.split(/\s+/).map(norm).filter((w) => aw.has(w));
+      if (hit.length) warn(`${l}: المقابل يكرر لفظ العنصر («${hit[0]}»): ${a}`);
+    });
   } else err(`${l}: نوع غير معروف ${x.type}`);
   exPerUnit[x.unit] = (exPerUnit[x.unit] || 0) + 1;
 });
