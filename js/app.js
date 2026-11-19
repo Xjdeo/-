@@ -70,7 +70,7 @@
   };
 
   /* آخر خيار فُتح في كل قائمة منسدلة */
-  function remember(key, val) { var l = store.get('lastSel', {}); l[key] = String(val); store.set('lastSel', l); }
+  function remember(key, val) { var l = store.get('lastSel', {}); if (l[key] === String(val)) return; l[key] = String(val); store.set('lastSel', l); }
   function recall(key) { var l = store.get('lastSel', {}); return Object.prototype.hasOwnProperty.call(l, key) ? l[key] : null; }
   function markLastOpened(root) {
     (root || document).querySelectorAll('select[data-mem]').forEach(function (sel) {
@@ -159,7 +159,7 @@
   (function checkBankVersion() {
     var v = store.get('bankVersion', null);
     if (v !== M.bankVersion) {
-      if (v !== null) { store.del('answers'); store.del('srs'); store.del('exam'); }
+      if (v !== null) { store.del('answers'); store.del('srs'); store.del('exam'); store.del('attempts'); store.del('autoSubmitted'); }
       store.set('bankVersion', M.bankVersion);
     }
   })();
@@ -177,9 +177,10 @@
     { id: 'figures', label: 'الأعلام والنظريات', icon: 'person' },
     { id: 'summary', label: 'خلاصة الفصل', icon: 'sum' }
   ];
-  var route = {}, navNonce = 0;
+  var route = { page: null, params: {} }, navNonce = 0;
   function parseHash() {
-    var raw = decodeURIComponent(location.hash.slice(1) || '');
+    var raw = location.hash.slice(1) || '';
+    try { raw = decodeURIComponent(raw); } catch (e) { /* ترميز معطوب: يُستعمل النص كما هو */ }
     var parts = raw.split('?'), path = parts[0], params = {};
     (parts[1] || '').split('&').forEach(function (kv) { if (!kv) return; var p = kv.split('='); params[p[0]] = p.slice(1).join('='); });
     var m = /^unit-(u\d+|all)-(home|practice|order|match|drills|exam|maps|compare|figures|summary)$/.exec(path);
@@ -202,7 +203,7 @@
     afterRender();
     updateNav();
     updateBanner();
-    if (route.page === 'unit') { var last = store.get('last', {}); last[route.unit] = route.tab; last._unit = route.unit; store.set('last', last); }
+    if (route.page === 'unit') { var last = store.get('last', {}); if (last[route.unit] !== route.tab || last._unit !== route.unit) { last[route.unit] = route.tab; last._unit = route.unit; store.set('last', last); } }
     if (isNav) {
       window.scrollTo(0, 0);
       try { main.focus({ preventScroll: true }); } catch (e) { main.focus(); }
@@ -228,17 +229,34 @@
 
   /* ───────────── العمود الجانبي ───────────── */
   function hasFigures(uid) { return figuresOf(uid).length > 0; }
+  var GROUPS = [
+    { label: 'تعلّم', ids: ['maps', 'compare', 'figures', 'summary'] },
+    { label: 'تدرّب', ids: ['practice', 'order', 'match'] },
+    { label: 'قِس نفسك', ids: ['exam'] }
+  ];
+  function tabVisible(uid, id) {
+    if (id === 'figures') return hasFigures(uid);
+    if (id === 'order' || id === 'match') return exercisesOf(uid, id).length > 0;
+    return true;
+  }
   function renderSide() {
     var u = getUnit(route.unit), st = stats(u.id);
-    var tabs = TABS.filter(function (t) { return (t.id !== 'figures' || hasFigures(u.id)) && ((t.id !== 'order' && t.id !== 'match') || exercisesOf(u.id, t.id).length); });
-    var items = tabs.map(function (t) {
-      var cur = t.id === route.tab ? ' aria-current="page"' : '';
-      return '<li><a href="#unit-' + u.id + '-' + t.id + '"' + cur + '>' + icon(t.icon) + '<span>' + h(t.label) + '</span></a></li>';
+    var tabById = {}; TABS.forEach(function (t) { tabById[t.id] = t; });
+    var homeCur = route.tab === 'home' ? ' aria-current="page"' : '';
+    var groups = GROUPS.map(function (g, gi) {
+      var ids = g.ids.filter(function (id) { return tabVisible(u.id, id); });
+      if (!ids.length) return '';
+      var items = ids.map(function (id) {
+        var t = tabById[id], cur = id === route.tab ? ' aria-current="page"' : '';
+        return '<li><a href="#unit-' + u.id + '-' + id + '"' + cur + '>' + icon(t.icon) + '<span>' + h(t.label) + '</span></a></li>';
+      }).join('');
+      return '<div class="actgroup" style="--span:' + ids.length + '"><p class="actgroup-l" id="ag-' + gi + '">' + h(g.label) + '</p>' +
+        '<ul class="actlist" aria-labelledby="ag-' + gi + '" style="--cols:' + ids.length + '">' + items + '</ul></div>';
     }).join('');
     side.innerHTML =
-      '<div class="side-head"><span class="ubadge" aria-hidden="true">' + (u.id === 'all' ? 'م' : h(u.number)) + '</span>' +
-      '<div><p class="side-name">' + h(u.name) + '</p><p class="side-sub">' + h(range(u.from, u.to)) + '</p></div></div>' +
-      '<nav aria-label="أنشطة ' + h(u.name) + '"><ul class="actlist" style="--cols:' + Math.ceil(tabs.length / 2) + '">' + items + '</ul></nav>' +
+      '<a class="side-head" href="#unit-' + u.id + '-home"' + homeCur + '><span class="ubadge" aria-hidden="true">' + (u.id === 'all' ? 'م' : h(u.number)) + '</span>' +
+      '<span class="side-headtext"><span class="side-name">' + h(u.name) + '</span><span class="side-sub">' + h(range(u.from, u.to)) + ' · ابدأ من هنا</span></span></a>' +
+      '<nav class="actgroups" aria-label="أنشطة ' + h(u.name) + '">' + groups + '</nav>' +
       '<div class="progbox"><p>الإنجاز: أجبت عن ' + h(st.answered) + ' من ' + h(st.total) + '</p>' +
       '<progress max="' + st.total + '" value="' + st.answered + '" aria-label="نسبة الإنجاز">' + h(st.done) + '٪</progress>' +
       '<p class="small" style="margin-top:.5em">الدقة: ' + (st.answered ? h(st.acc) + '٪' : '—') + (st.mastered ? ' · وحدة متقنة' : '') + '</p>' +
@@ -654,7 +672,8 @@
 
   /* ───────────── الاختبار ───────────── */
   function activeExam() { return store.get('exam', null); }
-  function attempts() { return store.get('attempts', []); }
+  /* تُعرض فقط محاولات النسخة الحالية من البنك؛ أرقام الخيارات في المحاولات الأقدم تشير إلى خيارات تغيّرت */
+  function attempts() { return store.get('attempts', []).filter(function (a) { return a && a.bv === M.bankVersion && a.qids && a.qids.every(function (id) { return qById[id]; }); }); }
   function scopeHash(scope) { return scope === 'mock' ? '#mock' : '#unit-' + scope + '-exam'; }
   function scopeName(scope) { return scope === 'mock' ? 'الاختبار الشامل' : 'محاكاة ' + getUnit(scope).name; }
 
@@ -678,8 +697,8 @@
       perUnit[q.unit] = perUnit[q.unit] || { total: 0, right: 0 };
       perUnit[q.unit].total++; if (ok) perUnit[q.unit].right++;
     });
-    var at = { id: ex.id, scope: ex.scope, units: ex.units, qids: ex.qids, ans: ex.ans, start: ex.start, used: now - ex.start, limit: ex.end - ex.start, right: right, total: ex.qids.length, perUnit: perUnit, auto: !!auto, at: Date.now() };
-    var list = attempts(); list.unshift(at); store.set('attempts', list.slice(0, 40));
+    var at = { id: ex.id, bv: M.bankVersion, scope: ex.scope, units: ex.units, qids: ex.qids, ans: ex.ans, start: ex.start, used: now - ex.start, limit: ex.end - ex.start, right: right, total: ex.qids.length, perUnit: perUnit, auto: !!auto, at: Date.now() };
+    var list = store.get('attempts', []); list.unshift(at); store.set('attempts', list.slice(0, 40));
     store.del('exam');
     if (auto) store.set('autoSubmitted', at.id);
     return at;
@@ -771,7 +790,12 @@
   function exercisesOf(uid, type) { return EX.filter(function (x) { return (uid === 'all' || x.unit === uid) && (!type || x.type === type); }); }
   var DR = {};      /* حالة كل تمرين في الذاكرة: {order:[], picks:{}, checked:bool, opts:[]} */
   var DRI = {};
-  function drillResults() { return store.get('drills', {}); }
+  /* تُهمَل نتيجة تمرين تغيّر عدد عناصره بعد حفظها */
+  function drillResults() {
+    var raw = store.get('drills', {}), out = {};
+    EX.forEach(function (x) { var r = raw[x.id]; if (r && r.total === drillTotal(x)) out[x.id] = r; });
+    return out;
+  }
   function drState(x, fresh) {
     if (!DR[x.id] || fresh) {
       if (x.type === 'order') {
@@ -1047,7 +1071,8 @@
     var html = cover + '<div class="printhead">مسار · ' + h(C.title) + ' — ' + h(u.name) + ' · ' + h(C.reference) + ' ' + h(range(u.from, u.to)) + '</div>' +
       '<div class="pagehead"><p class="eyebrow">' + h(u.name) + ' · ' + h(range(u.from, u.to)) + '</p><h1>خلاصة ' + h(u.id === 'all' ? 'الفصل' : u.name) + '</h1>' +
       '<p class="read">كل محور بعُقده ومفتاح استرجاعه، بترتيب المذكرة. النصوص بين علامتي التنصيص منقولة من المذكرة.</p></div>' +
-      (inFrame ? '' : '<div class="btnrow noprint" style="margin:0 0 10px"><button type="button" class="btn" data-act="print">' + icon('print') + 'طباعة الخلاصة</button></div>');
+      '<div class="btnrow noprint" style="margin:0 0 10px"><button type="button" class="btn" data-act="print">' + icon('print') + 'طباعة الخلاصة</button>' +
+      (inFrame ? '<span class="small">إن لم تظهر نافذة الطباعة، فاستعمل أمر الطباعة في المتصفح، أو افتح الموقع في صفحة مستقلة.</span>' : '') + '</div>';
     var lastUnit = null;
     topics.forEach(function (T) {
       if (u.id === 'all' && lastUnit !== T.unit.id) { html += '<h2 style="margin-top:22px">' + h(T.unit.name + ': ' + T.unit.title) + '</h2>'; lastUnit = T.unit.id; }
@@ -1226,7 +1251,10 @@
   /* ───────────── الأحداث ───────────── */
   function rerenderKeep(sel) {
     render(false);
-    if (sel) { var el = document.querySelector(sel); if (el) try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }
+    if (sel) {
+      var el = /^#[^\s\[\]]+$/.test(sel) ? document.getElementById(sel.slice(1)) : document.querySelector(sel);
+      if (el) try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+    }
   }
   function focusQ() { var el = main.querySelector('.qtext[tabindex]'); if (el) { try { el.focus({ preventScroll: false }); } catch (e) { el.focus(); } } }
 
@@ -1298,16 +1326,16 @@
     drcheck: function (el) {
       var x = EX.filter(function (e) { return e.id === el.dataset.x; })[0], st = drState(x);
       st.checked = true;
-      var sc = drillScore(x, st), res = drillResults(), prev = res[x.id];
-      res[x.id] = { last: sc, total: drillTotal(x), best: Math.max(sc, prev ? prev.best : 0), at: Date.now() };
-      store.set('drills', res);
+      var sc = drillScore(x, st), prev = drillResults()[x.id], raw = store.get('drills', {});
+      raw[x.id] = { last: sc, total: drillTotal(x), best: Math.max(sc, prev ? prev.best : 0), at: Date.now() };
+      store.set('drills', raw);
       render(false); var fb = document.getElementById('drfb'); if (fb) fb.focus();
     },
     drreset: function (el) { var x = EX.filter(function (e) { return e.id === el.dataset.x; })[0]; drState(x, true); render(false); var t = document.getElementById('drt'); if (t) t.focus(); },
     drstep: function (el) { var u = el.dataset.unit, k = el.dataset.kind, i = (DRI[k + ':' + u] || 0) + parseInt(el.dataset.d, 10); go('#unit-' + u + '-' + k + '?d=' + i); },
     mapstep: function (el) { var u = el.dataset.unit, ti = (MAPOPEN[u + ':t'] || 0) + parseInt(el.dataset.d, 10); go('#unit-' + u + '-maps?t=' + ti); },
     cmpstep: function (el) { var u = el.dataset.unit, i = (CMPI[u] || 0) + parseInt(el.dataset.d, 10); go('#unit-' + u + '-compare?c=' + i); },
-    print: function () { window.print(); },
+    print: function () { try { window.print(); } catch (e) {} },
     resetarm: function () { resetArmed = true; rerenderKeep('[data-act="resetgo"]'); },
     resetcancel: function () { resetArmed = false; rerenderKeep('[data-act="resetarm"]'); },
     resetgo: function () {
@@ -1385,7 +1413,13 @@
     closeDlg(unitsDlg);
     render(true);
   });
-  window.addEventListener('storage', function (e) { if (e.key && e.key.indexOf(NS) === 0) render(false); });
+  /* تزامن التبويبات: يُعاد الرسم لتغيّر التقدم فقط، لا لمفاتيح الواجهة (آخر صفحة، آخر خيار) حتى لا يتبادل تبويبان إعادة الرسم بلا نهاية */
+  window.addEventListener('storage', function (e) {
+    if (!e.key || e.key.indexOf(NS) !== 0) return;
+    var k = e.key.slice(NS.length);
+    if (k === 'last' || k === 'lastSel') return;
+    render(false);
+  });
 
   render(false);
 })();
