@@ -1,24 +1,39 @@
-<title>الوضع والوضّاعون</title>
+<title>مسار · الوضع والوضّاعون</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%23A6732B' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M7 27C7 20 16 20 16 16S25 12 25 5'/%3E%3Ccircle cx='7' cy='27' r='3' fill='%23A6732B' stroke='none'/%3E%3Ccircle cx='16' cy='16' r='2.6' fill='%23A6732B' fill-opacity='.45' stroke='none'/%3E%3Ccircle cx='25' cy='5' r='3'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
-<!-- نسخة النشر في Artifacts: الملفات style.css وdata.js وapp.js هي نفسها ملفات الموقع في wad/ -->
+<!-- نسخة النشر في Artifacts: style.css وdata.js وapp.js هي ملفات الموقع نفسها في wad/ -->
 <script>document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl';</script>
-<a class="skip" href="#main">تخطَّ إلى المحتوى</a>
-<header class="top">
-  <div class="top-in">
-    <a class="brand" href="#home">الوضع والوضّاعون</a>
-    <nav class="mainnav" aria-label="تنقّل المقرر">
-      <a href="#home" data-nav="home">الرئيسة</a>
-      <a href="#topics" data-nav="topics">المحاور</a>
-      <a href="#progress" data-nav="progress">تقدّمي</a>
-      <a href="#notes" data-nav="notes">ملاحظات على المصدر</a>
-    </nav>
+<a class="skip-link" href="#main">تخطَّ إلى المحتوى</a>
+<header><div class="top">
+  <button class="brand" data-go="#home" aria-label="مسار، صفحة المقرر"><span id="brandMark"></span><span>مسار</span><span class="small">الوضع والوضّاعون</span></button>
+  <div class="top-actions">
+    <button data-top="course" data-go="#home"><span class="nav-glyph" data-icon="course"></span>المقرر</button>
+    <button data-top="bank" data-go="#bank"><span class="nav-glyph" data-icon="bank"></span><span class="long">بنك&nbsp;</span>الأسئلة</button>
+    <button data-top="mock" data-go="#mock"><span class="nav-glyph" data-icon="exam"></span><span class="long">الاختبار&nbsp;</span>الشامل</button>
+    <button data-top="progress" data-go="#progress"><span class="nav-glyph" data-icon="progress"></span>تقدّمي</button>
+    <button data-top="notes" data-go="#notes" aria-label="ملاحظات على المصدر"><span class="nav-glyph" data-icon="info"></span><span class="long">المصدر</span></button>
+    <button id="nightBtn" type="button" role="switch" aria-checked="false" data-act="night" aria-label="الوضع الليلي"><span class="nav-glyph" id="nightGlyph"></span><span class="long">الوضع الليلي</span><span class="night-track" id="nightTrack" aria-hidden="true"></span></button>
   </div>
-</header>
-<main id="main" tabindex="-1"></main>
-<footer class="foot">أداة مساعدة للمذاكرة مبنية على المذكرة وحدها، ولا تغني عن الرجوع إليها. أرقام الصفحات هي الأرقام المطبوعة في المذكرة.</footer>
+</div></header>
+<div class="layout">
+  <aside>
+    <div id="chapterContext" class="chapter-context"></div>
+    <nav id="nav" aria-label="أنشطة المحور"></nav>
+    <div class="progressbox"><div class="small">تقدّمك في هذا المحور</div><strong id="progressText"></strong><div id="progressBar"></div><p class="small">يُحفظ في هذا المتصفح فقط، ويُحسب من قراءة الملخص والإجابة عن الأسئلة.</p></div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<footer>مسار رفيق للمذاكرة الذاتية. هذا المقرر مبني على مذكرة «الوضع والوضّاعون» وحدها، ولا يغني عن الرجوع إليها، وأرقام الصفحات فيه أرقامها المطبوعة. الأسئلة والتعليلات صياغات تعليمية مقترحة، وليست أسئلة رسمية ولا توقعات مؤكدة للاختبار.</footer>
+<nav class="tabbar" aria-label="التنقل الرئيسي">
+  <button data-top="course" data-go="#home"><span data-icon="course"></span><span>المقرر</span></button>
+  <button data-top="bank" data-go="#bank"><span data-icon="bank"></span><span>بنك الأسئلة</span></button>
+  <button data-top="mock" data-go="#mock"><span data-icon="exam"></span><span>الاختبار الشامل</span></button>
+  <button data-top="progress" data-go="#progress"><span data-icon="progress"></span><span>تقدّمي</span></button>
+  <button data-top="notes" data-go="#notes"><span data-icon="info"></span><span>المصدر</span></button>
+</nav>
 <script src="data.js"></script>
 <script src="app.js"></script>
