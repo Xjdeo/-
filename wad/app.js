@@ -74,8 +74,18 @@
     T.forEach(function (t, i) { var s = stats(i); u += s.total + 1; d += s.answered + (s.read ? 1 : 0); a += s.answered; r += s.right; });
     return { pct: pct(d, u), answered: a, right: r, total: QS.length };
   }
-  function firstUnfinished() { for (var i = 0; i < T.length; i++) { var s = stats(i); if (s.pct < 100) return { i: i, s: s }; } return null; }
-  function resumeHash() { var f = firstUnfinished(); return f ? '#' + T[f.i].id + '-' + (f.s.read ? 'quiz' : 'summary') : '#progress'; }
+  function firstUnread() { for (var i = 0; i < T.length; i++) if (!S.read[T[i].id]) return i; return -1; }
+  function firstUnanswered() { for (var i = 0; i < QS.length; i++) if (!S.ans[QS[i].id]) return QS[i]; return null; }
+  function resumeTarget() {
+    var r = firstUnread(); if (r > -1) return { h: '#summary', sec: T[r].id, label: 'الملخص · المحور ' + AR(r + 1) + ': ' + T[r].title, btn: 'اقرأ الملخص' };
+    var q = firstUnanswered(); if (q) return { h: '#quiz', sec: T[q.ti].id, label: 'التدريب · المحور ' + AR(q.ti + 1) + ': ' + T[q.ti].title, btn: 'ابدأ التدريب' };
+    return { h: '#mock', sec: '', label: 'الاختبار الشامل في المقرر كله', btn: 'الاختبار الشامل' };
+  }
+  function goAttr(t) { return 'data-go="' + t.h + '"' + (t.sec ? ' data-sec="' + t.sec + '"' : ''); }
+  function actStats() {
+    var o = overall(), read = T.filter(function (t) { return S.read[t.id]; }).length;
+    return { summary: read, quiz: o.answered, right: o.right };
+  }
   function go(h) { if (location.hash === h) route(); else location.hash = h; }
 
   /* ───── بطاقة سؤال تفاعلية (مشتركة بين تدريب المحور وبنك الأسئلة) ───── */
@@ -109,53 +119,60 @@
 
   /* ───── صفحة المقرر ───── */
   function courseView() {
-    var o = overall(), f = firstUnfinished(), started = o.pct > 0, ex = get('exam', null);
+    var o = overall(), started = o.pct > 0, r = resumeTarget(), a = actStats(), ex = get('exam', null);
     var h = '';
     if (ex && !ex.submitted && ex.end > Date.now()) h += '<div class="banner" role="status"><p><strong>محاولة اختبار جارية:</strong> متبقٍ ' + fmtTime(ex.end - Date.now()) + '. الوقت يستمر حتى لو غادرت الصفحة.</p><button class="primary" data-go="#mock">تابع الاختبار</button></div>';
     h += '<section class="course-hero"><div class="eyebrow">' + esc(D.course.institution) + '</div>' +
       '<h1>' + esc(D.course.title) + '</h1><div class="sub">' + esc(D.course.subtitle) + '</div>' +
       '<p>إعداد: ' + esc(D.course.author) + ' — ' + esc(D.course.authorRole) + '.</p>' +
-      '<p>أداة مساعدة للمذاكرة مبنية على المذكرة وحدها، ولا تغني عن الرجوع إليها. كل ملخص وسؤال وتعليل يحمل رقم صفحته المطبوعة.</p>' +
-      '<div class="actions"><button class="primary ic" data-go="' + resumeHash() + '">' + ic('play') + (!started ? 'ابدأ المذاكرة' : f ? 'تابع المذاكرة' : 'راجع تقدّمك') + '</button>' +
+      '<p>تُذاكَر المذكرة كاملة في خمسة أنشطة متتابعة، يضمّ كلٌّ منها المحاور الأحد عشر بترتيب فهرسها. أداة مساعدة لا تغني عن المذكرة، وكل ملخص وسؤال وتعليل يحمل رقم صفحته المطبوعة.</p>' +
+      '<div class="actions"><button class="primary ic" ' + goAttr(started ? r : { h: '#summary', sec: '' }) + '>' + ic('play') + (!started ? 'ابدأ المذاكرة' : r.h === '#mock' ? 'الاختبار الشامل' : 'تابع المذاكرة') + '</button>' +
       '<button data-go="#mock">الاختبار الشامل</button></div>' +
       '<div class="stats"><span><strong>' + AR(T.length) + '</strong>محورًا</span><span><strong>' + AR(QS.length) + '</strong>سؤالًا</span><span><strong>' + AR(D.course.pages) + '</strong>صفحة</span><span><strong>' + AR(o.pct) + '٪</strong>تقدّمك</span></div></section>';
-    if (f && started) h += '<div class="resume-card"><p><span>الخطوة التالية</span><strong>المحور ' + AR(f.i + 1) + ': ' + esc(T[f.i].title) + '</strong></p><button class="primary" data-go="' + resumeHash() + '">' + (f.s.read ? 'ابدأ التدريب' : 'اقرأ الملخص') + '</button></div>';
-    h += '<div class="sectionhead"><h2>محاور المقرر</h2><span class="small">بترتيب فهرس المذكرة (ص ١)</span></div><ol class="stem">';
-    T.forEach(function (t, i) {
-      var s = stats(i);
-      h += '<li class="stage"><div class="node"><span class="ring" style="--p:' + s.pct + '"></span><span class="num">' + AR(i + 1) + '</span></div>' +
-        '<div class="stage-body"><h3><span>المحور ' + AR(i + 1) + ' · ' + range(t) + '</span><span class="pct">' + (s.pct === 100 ? 'مكتمل' : AR(s.pct) + '٪') + '</span></h3>' +
-        '<div class="stage-title">' + esc(t.title) + '</div><div class="stage-actions">' +
-        '<button data-go="#' + t.id + '-summary">الملخص</button><button data-go="#' + t.id + '-map">الخريطة</button><button data-go="#' + t.id + '-quiz">التدريب · ' + AR(s.answered) + '/' + AR(s.total) + '</button></div></div></li>';
+    if (started) h += '<div class="resume-card"><p><span>الخطوة التالية</span><strong>' + esc(r.label) + '</strong></p><button class="primary" ' + goAttr(r) + '>' + r.btn + '</button></div>';
+    var steps = [
+      ['summary', 'ملخصات المحاور الأحد عشر بترتيب المذكرة، مع علامة «قرأت» لكل محور.', AR(a.summary) + ' / ' + AR(T.length) + ' مقروء', pct(a.summary, T.length)],
+      ['map', 'خرائط المفاهيم: العلاقات بين عناصر كل محور كما رتّبتها المذكرة.', '', -1],
+      ['table', 'جداول المقارنة التي يتيحها المصدر، وبيان المحاور التي لا مقارنة فيها.', '', -1],
+      ['terms', 'المصطلحات والأقوال بإجابات مخفية للاسترجاع.', AR(T.reduce(function (n, t) { return n + t.terms.length; }, 0)) + ' بندًا', -1],
+      ['quiz', 'أسئلة المقرر كلها، مقسّمة بحسب المحاور، مع التعليل والصفحة بعد كل إجابة.', AR(a.quiz) + ' / ' + AR(QS.length) + ' مُجاب', pct(a.quiz, QS.length)]
+    ];
+    h += '<div class="sectionhead"><h2>مسار المذاكرة</h2><span class="small">خمسة أنشطة للمقرر كاملًا</span></div><ol class="stem">';
+    steps.forEach(function (st, i) {
+      var tab = TABS.filter(function (x) { return x[0] === st[0]; })[0];
+      h += '<li class="stage"><div class="node">' + (st[3] > -1 ? '<span class="ring" style="--p:' + st[3] + '"></span>' : '') + '<span class="num">' + AR(i + 1) + '</span></div>' +
+        '<div class="stage-body"><h3><span>النشاط ' + AR(i + 1) + '</span><span class="pct">' + st[2] + '</span></h3><div class="stage-title">' + tab[1] + '</div><p class="small" style="margin:0 0 .7em">' + st[1] + '</p>' +
+        '<div class="stage-actions"><button class="ic" data-go="#' + st[0] + '">' + ic(tab[2]) + 'افتح</button></div></div></li>';
     });
-    return h + '</ol>';
+    h += '</ol><div class="sectionhead"><h2>فهرس المحاور</h2><span class="small">بترتيب فهرس المذكرة (ص ١) · اضغط محورًا لتنتقل إلى ملخصه</span></div><section class="panel"><ol class="toc">' +
+      T.map(function (t, i) { return '<li><button class="row-link" data-go="#summary" data-sec="' + t.id + '">' + esc(t.title) + '</button> <span class="small">' + range(t) + (S.read[t.id] ? ' · ✓ مقروء' : '') + '</span></li>'; }).join('') + '</ol></section>';
+    return h;
   }
 
   /* ───── أنشطة المحور ───── */
   function tSummary(t) {
-    var h = '<section class="panel sum">';
+    var h = '<div class="panel sum">';
     t.summary.forEach(function (g) {
-      h += '<h2>' + esc(g.h) + '</h2><ul>';
+      h += '<h3>' + esc(g.h) + '</h3><ul>';
       g.pts.forEach(function (p) { h += '<li>' + fmt(p[0]) + pg(p[1]) + '</li>'; });
       h += '</ul>';
     });
     h += '<div class="readrow">' + (S.read[t.id]
-      ? '<span class="status-ok">✓ قرأت الملخص</span><button data-act="unread">إلغاء العلامة</button>'
-      : '<button class="primary" data-act="read">أنهيت قراءة الملخص</button><span class="small">يُحتسب في تقدّمك</span>') + '</div>';
-    return h + '</section>';
+      ? '<span class="status-ok">✓ قرأت ملخص هذا المحور</span><button data-act="unread" data-t="' + t.id + '">إلغاء العلامة</button>'
+      : '<button class="primary" data-act="read" data-t="' + t.id + '">قرأت ملخص هذا المحور</button><span class="small">يُحتسب في تقدّمك</span>') + '</div>';
+    return h + '</div>';
   }
   function mapList(k) {
     return '<ul>' + k.map(function (n) { return '<li>' + fmt(n.t) + pg(n.p) + (n.k && n.k.length ? mapList(n.k) : '') + '</li>'; }).join('') + '</ul>';
   }
   function tMap(t) {
     var m = t.map;
-    return '<p class="small">تعرض الخريطة العلاقات بين عناصر المحور كما رتّبتها المذكرة؛ رقم الصفحة بجانب العنصر، وما لم يُرقَّم يتبع صفحة العنصر الأعلى.</p>' +
-      '<section class="panel"><div class="maproot">' + fmt(m.t) + pg(m.p) + '</div><div class="branches">' +
+    return '<div class="panel"><div class="maproot">' + fmt(m.t) + pg(m.p) + '</div><div class="branches">' +
       m.k.map(function (b) { return '<div class="branch"><div class="bt">' + fmt(b.t) + pg(b.p) + '</div>' + (b.k && b.k.length ? mapList(b.k) : '') + '</div>'; }).join('') +
-      '</div></section>';
+      '</div></div>';
   }
   function tTable(t) {
-    if (!t.tables) return '<section class="panel empty-box"><strong>لا يوجد جدول مقارنة لهذا المحور.</strong><p style="margin:.6em auto 0">' + esc(t.noTable) + '</p></section>';
+    if (!t.tables) return '<div class="note"><strong>لا يوجد جدول مقارنة لهذا المحور.</strong> ' + esc(t.noTable) + '</div>';
     return t.tables.map(function (tb) {
       var h = '<div class="scroll"><div class="tblcap">' + esc(tb.title) + pg(tb.pages || tb.p) + '</div><table><thead><tr>';
       tb.head.forEach(function (c) { h += '<th scope="col">' + esc(c) + '</th>'; });
@@ -165,49 +182,61 @@
     }).join('');
   }
   function tTerms(t) {
-    var h = '<p class="small">حاول استرجاع الجواب قبل إظهاره.</p><div class="actions"><button data-act="showall">أظهر الكل</button><button data-act="hideall">أخفِ الكل</button></div><div class="terms">';
+    var h = '<div class="terms">';
     t.terms.forEach(function (x, i) {
-      h += '<div class="term"><span class="q">' + fmt(x[0]) + '</span><button data-act="toggle" aria-expanded="false" aria-controls="ta' + i + '">أظهر الجواب</button>' +
-        '<div class="a" id="ta' + i + '" hidden>' + fmt(x[1]) + pg(x[2]) + '</div></div>';
+      h += '<div class="term"><span class="q">' + fmt(x[0]) + '</span><button data-act="toggle" aria-expanded="false" aria-controls="ta-' + t.id + '-' + i + '">أظهر الجواب</button>' +
+        '<div class="a" id="ta-' + t.id + '-' + i + '" hidden>' + fmt(x[1]) + pg(x[2]) + '</div></div>';
     });
     return h + '</div>';
   }
+  var qNum = 0;
   function tQuiz(t, ti) {
-    var s = stats(ti), qs = topicQs(ti), n = 0;
-    var h = '<div class="quiz-progress"><span class="stat"><b>' + AR(s.answered) + ' / ' + AR(s.total) + '</b>أُجيب عنها</span><span class="stat"><b>' + AR(s.right) + '</b>صحيحة</span>' +
-      '<span class="grow">' + bar(pct(s.answered, s.total)) + '</span>' + (s.answered ? '<button class="ic" data-act="retry">' + ic('retry') + 'أعد التدريب</button>' : '') + '</div>';
-    h += '<h2 class="qgroup">اختيار من متعدد</h2>';
-    qs.filter(function (q) { return q.kind === 'm'; }).forEach(function (q) { h += qCard(q, ++n); });
-    h += '<h2 class="qgroup">صح أو خطأ</h2>';
-    qs.filter(function (q) { return q.kind === 'f'; }).forEach(function (q) { h += qCard(q, ++n); });
-    if (s.answered === s.total) h += '<div class="note">أتممت أسئلة هذا المحور: ' + AR(s.right) + ' من ' + AR(s.total) + ' صحيحة.' + (s.right < s.total ? ' راجع التعليلات وصفحاتها، ثم أعد التدريب إن شئت.' : '') + '</div>';
+    var s = stats(ti), qs = topicQs(ti);
+    var h = '<p class="small">' + countQ(s.total) + ' · أجبت عن ' + AR(s.answered) + ' · صحيحة ' + AR(s.right) + '</p>';
+    qs.forEach(function (q) { h += qCard(q, ++qNum); });
     return h;
   }
-  function nextStep(i, tab) {
-    var ti = TABS.map(function (x) { return x[0]; }).indexOf(tab), t = T[i], href, txt, btn;
-    if (ti < TABS.length - 1) { href = '#' + t.id + '-' + TABS[ti + 1][0]; txt = TABS[ti + 1][1]; btn = TABS[ti + 1][0] === 'quiz' ? 'ابدأ التدريب' : 'التالي'; }
-    else if (i < T.length - 1) { href = '#' + T[i + 1].id + '-summary'; txt = 'المحور ' + AR(i + 2) + ': ' + T[i + 1].title; btn = 'المحور التالي'; }
+  var INTRO = {
+    summary: 'ملخصات المحاور الأحد عشر بترتيب المذكرة. ضع علامة «قرأت» بعد كل محور ليُحتسب في تقدّمك.',
+    map: 'تعرض كل خريطة العلاقات بين عناصر محورها كما رتّبتها المذكرة؛ رقم الصفحة بجانب العنصر، وما لم يُرقَّم يتبع صفحة العنصر الأعلى.',
+    table: 'جداول المقارنة التي يتيحها المصدر في كل محور، وحيث لا مادة لمقارنة صريحة يُذكر ذلك.',
+    terms: 'حاول استرجاع الجواب قبل إظهاره.',
+    quiz: 'أسئلة المقرر كلها مقسّمة بحسب المحاور. بعد كل إجابة يظهر الصحيح والتعليل ورقم الصفحة.'
+  };
+  function activityView(tab) {
+    var label = TABS.filter(function (x) { return x[0] === tab; })[0][1], fn = { summary: tSummary, map: tMap, table: tTable, terms: tTerms, quiz: tQuiz }[tab];
+    var h = '<div class="thead"><div class="eyebrow">المقرر كاملًا · ' + label + '</div><h1>' + label + '</h1><p class="small">' + INTRO[tab] + '</p></div>';
+    if (tab === 'terms') h += '<div class="actions"><button data-act="showall">أظهر كل الأجوبة</button><button data-act="hideall">أخفِ كل الأجوبة</button></div>';
+    if (tab === 'quiz') {
+      var o = overall();
+      h += '<div class="quiz-progress"><span class="stat"><b>' + AR(o.answered) + ' / ' + AR(o.total) + '</b>أُجيب عنها</span><span class="stat"><b>' + AR(o.right) + '</b>صحيحة</span>' +
+        '<span class="grow">' + bar(pct(o.answered, o.total)) + '</span>' + (o.answered ? '<button class="ic" data-act="retry">' + ic('retry') + 'أعد التدريب كله</button>' : '') + '</div>';
+      qNum = 0;
+    }
+    T.forEach(function (t, i) {
+      h += '<section class="unit" id="s-' + t.id + '"><h2 class="unit-h"><span class="unum">' + AR(i + 1) + '</span><span>' + esc(t.title) + '<span class="small"> · ' + range(t) + '</span></span></h2>' + fn(t, i) + '</section>';
+    });
+    if (tab === 'quiz' && overall().answered === QS.length) h += '<div class="note">أتممت أسئلة المقرر كلها: ' + AR(overall().right) + ' من ' + AR(QS.length) + ' صحيحة. راجع الأخطاء من بنك الأسئلة (أخطأت فيها)، أو جرّب الاختبار الشامل.</div>';
+    return h + nextStep(tab);
+  }
+  function nextStep(tab) {
+    var ti = TABS.map(function (x) { return x[0]; }).indexOf(tab), href, txt, btn;
+    if (ti < TABS.length - 1) { href = '#' + TABS[ti + 1][0]; txt = TABS[ti + 1][1]; btn = TABS[ti + 1][0] === 'quiz' ? 'ابدأ التدريب' : 'التالي'; }
     else { href = '#mock'; txt = 'الاختبار الشامل في المقرر كله'; btn = 'الاختبار الشامل'; }
-    var prev = ti > 0 ? '<button class="ic" data-go="#' + t.id + '-' + TABS[ti - 1][0] + '">' + ic('prev') + TABS[ti - 1][1] + '</button>'
-      : i > 0 ? '<button class="ic" data-go="#' + T[i - 1].id + '-quiz">' + ic('prev') + 'تدريب المحور ' + AR(i) + '</button>' : '';
+    var prev = ti > 0 ? '<button class="ic" data-go="#' + TABS[ti - 1][0] + '">' + ic('prev') + TABS[ti - 1][1] + '</button>' : '';
     return '<div class="next">' + prev + '<span class="lbl">الخطوة التالية<b>' + esc(txt) + '</b></span><button class="primary ic" data-go="' + href + '">' + btn + ic('next') + '</button></div>';
   }
-  function topicView(i, tab) {
-    var t = T[i];
-    var body = { summary: tSummary, map: tMap, table: tTable, terms: tTerms, quiz: tQuiz }[tab](t, i);
-    var label = TABS.filter(function (x) { return x[0] === tab; })[0][1];
-    return '<div class="thead"><div class="eyebrow">المحور ' + AR(i + 1) + ' من ' + AR(T.length) + ' · ' + label + '</div><h1>' + esc(t.title) + '</h1><p class="small">' + range(t) + ' من المذكرة</p></div>' +
-      body + nextStep(i, tab);
-  }
-  function asideFor(i, tab) {
-    var t = T[i], s = stats(i);
-    $('#chapterContext').innerHTML = '<button class="back-link" data-go="#home">‹ كل المحاور</button><span class="ctx-num">' + AR(i + 1) + '</span><span class="ctx-name">المحور ' + AR(i + 1) + ' · ' + range(t) + '</span><strong>' + esc(t.title) + '</strong>';
+  function asideFor(tab) {
+    var ti = TABS.map(function (x) { return x[0]; }).indexOf(tab), a = actStats(), o = overall();
+    $('#chapterContext').innerHTML = '<button class="back-link" data-go="#home">‹ صفحة المقرر</button><span class="ctx-num">' + AR(ti + 1) + '</span><span class="ctx-name">المقرر كاملًا · النشاط ' + AR(ti + 1) + ' من ' + AR(TABS.length) + '</span><strong>' + TABS[ti][1] + '</strong>';
     $('#nav').innerHTML = TABS.map(function (x) {
-      var cnt = x[0] === 'quiz' ? '<span class="cnt">' + AR(s.answered) + '/' + AR(s.total) + '</span>' : x[0] === 'summary' && s.read ? '<span class="cnt">✓</span>' : x[0] === 'table' && !t.tables ? '<span class="cnt">—</span>' : '';
-      return '<button data-go="#' + t.id + '-' + x[0] + '"' + (x[0] === tab ? ' class="active" aria-current="page"' : '') + '><span class="nav-glyph">' + ic(x[2]) + '</span>' + x[1] + cnt + '</button>';
+      var cnt = x[0] === 'quiz' ? '<span class="cnt">' + AR(a.quiz) + '/' + AR(QS.length) + '</span>' : x[0] === 'summary' ? '<span class="cnt">' + AR(a.summary) + '/' + AR(T.length) + '</span>' : '';
+      return '<button data-go="#' + x[0] + '"' + (x[0] === tab ? ' class="active" aria-current="page"' : '') + '><span class="nav-glyph">' + ic(x[2]) + '</span>' + x[1] + cnt + '</button>';
     }).join('');
-    $('#progressText').textContent = AR(s.pct) + '٪';
-    $('#progressBar').innerHTML = bar(s.pct);
+    $('#jump').innerHTML = '<label for="jumpSel" class="small">انتقل إلى محور في هذه الصفحة</label><select id="jumpSel" data-jump="1"><option value="">اختر محورًا…</option>' +
+      T.map(function (t, i) { return '<option value="' + t.id + '">' + AR(i + 1) + '. ' + esc(t.title) + '</option>'; }).join('') + '</select>';
+    $('#progressText').textContent = AR(o.pct) + '٪';
+    $('#progressBar').innerHTML = bar(o.pct);
   }
 
   /* ───── بنك الأسئلة ───── */
@@ -286,7 +315,7 @@
       '<div class="kpi"><span class="k-label">متروكة</span><span class="k-val">' + AR(unanswered) + '</span></div><div class="kpi"><span class="k-label">الوقت المستغرق</span><span class="k-val">' + fmtTime(e.finishedAt - e.start) + '</span><span class="k-sub">من ' + fmtTime(e.dur) + '</span></div></div>' +
       '<p class="small">درجة واحدة لكل إجابة صحيحة، ولا خصم على الخطأ، والسؤال المتروك درجته صفر. النتيجة تقيس هذه المحاولة التدريبية، ولا تتنبأ بدرجة الاختبار الفعلي.</p>' +
       '<h3>النتيجة بحسب المحور</h3><div class="scroll"><table class="result-table"><thead><tr><th scope="col">المحور</th><th scope="col">الأسئلة</th><th scope="col">صحيحة</th><th scope="col">خاطئة</th><th scope="col">متروكة</th></tr></thead><tbody>' +
-      Object.keys(per).sort(function (a, b) { return a - b; }).map(function (ti) { var p = per[ti]; return '<tr><td><button class="row-link" data-go="#' + T[ti].id + '-summary">' + AR(+ti + 1) + '. ' + esc(T[ti].title) + '</button></td><td>' + AR(p.t) + '</td><td>' + AR(p.c) + '</td><td>' + AR(p.b) + '</td><td>' + AR(p.n) + '</td></tr>'; }).join('') +
+      Object.keys(per).sort(function (a, b) { return a - b; }).map(function (ti) { var p = per[ti]; return '<tr><td><button class="row-link" data-go="#summary" data-sec="' + T[ti].id + '">' + AR(+ti + 1) + '. ' + esc(T[ti].title) + '</button></td><td>' + AR(p.t) + '</td><td>' + AR(p.c) + '</td><td>' + AR(p.b) + '</td><td>' + AR(p.n) + '</td></tr>'; }).join('') +
       '</tbody></table></div><div class="actions"><button class="primary ic" data-act="exretry">' + ic('retry') + 'أعد الاختبار بأسئلة مسحوبة جديدة</button><button data-act="exnew">إعداد جديد</button></div></section>' +
       '<div class="sectionhead"><h2>مراجعة الإجابات</h2><div class="seg" role="group" aria-label="تصفية المراجعة"><button class="' + (filter === 'all' ? 'on' : '') + '" aria-pressed="' + (filter === 'all') + '" data-act="exfilter" data-v="all">كل الأسئلة</button><button class="' + (filter === 'bad' ? 'on' : '') + '" aria-pressed="' + (filter === 'bad') + '" data-act="exfilter" data-v="bad">الأخطاء والمتروكة (' + AR(wrong + unanswered) + ')</button></div></div>' +
       (list.length ? list.map(function (x) { return reviewItem(x.q, x.i + 1, x.c == null ? null : x.c, false, true); }).join('') : '<p class="panel empty-box">لا أخطاء ولا أسئلة متروكة في هذه المحاولة.</p>');
@@ -334,17 +363,17 @@
   /* ───── التقدّم والملاحظات ───── */
   function progressView() {
     var o = overall();
-    var h = '<div class="thead"><div class="eyebrow">المقرر كله</div><h1>تقدّمي</h1><p class="small">يُحسب تقدّم المحور من قراءة ملخصه والإجابة عن أسئلته، ويُحفظ في هذا المتصفح فقط. نتائج الاختبار الشامل منفصلة ولا تدخل فيه.</p></div>';
+    var h = '<div class="thead"><div class="eyebrow">المقرر كله</div><h1>تقدّمي</h1><p class="small">يُحسب التقدّم من قراءة ملخص كل محور والإجابة عن أسئلته، ويُحفظ في هذا المتصفح فقط. نتائج الاختبار الشامل منفصلة ولا تدخل فيه.</p></div>';
     if (!storageOK) h += '<div class="note">تعذّر الحفظ في هذا المتصفح (قد يكون التخزين معطّلًا)؛ سيضيع التقدّم عند إغلاق الصفحة.</div>';
     h += '<section class="panel"><div class="score-grid"><div class="kpi"><span class="k-label">التقدّم الإجمالي</span><span class="k-val">' + AR(o.pct) + '٪</span></div>' +
       '<div class="kpi"><span class="k-label">أسئلة أُجيب عنها</span><span class="k-val">' + AR(o.answered) + '</span><span class="k-sub">من ' + AR(o.total) + '</span></div>' +
       '<div class="kpi"><span class="k-label">إجابات صحيحة</span><span class="k-val">' + AR(o.right) + '</span></div>' +
       '<div class="kpi"><span class="k-label">ملخصات مقروءة</span><span class="k-val">' + AR(T.filter(function (t) { return S.read[t.id]; }).length) + '</span><span class="k-sub">من ' + AR(T.length) + '</span></div></div>' +
-      bar(o.pct) + '<div class="actions"><button class="primary ic" data-go="' + resumeHash() + '">' + ic('play') + (firstUnfinished() ? 'تابع المذاكرة' : 'راجع المحاور') + '</button></div></section>';
-    h += '<div class="sectionhead"><h2>التقدّم في كل محور</h2></div><div class="scroll"><table class="result-table"><thead><tr><th scope="col">المحور</th><th scope="col">الملخص</th><th scope="col">الأسئلة</th><th scope="col">الصحيح</th><th scope="col">التقدّم</th></tr></thead><tbody>';
+      bar(o.pct) + '<div class="actions"><button class="primary ic" ' + goAttr(resumeTarget()) + '>' + ic('play') + resumeTarget().btn + '</button></div></section>';
+    h += '<div class="sectionhead"><h2>التقدّم بحسب المحاور</h2></div><div class="scroll"><table class="result-table"><thead><tr><th scope="col">المحور</th><th scope="col">الملخص</th><th scope="col">الأسئلة</th><th scope="col">الصحيح</th><th scope="col">التقدّم</th></tr></thead><tbody>';
     T.forEach(function (t, i) {
       var s = stats(i);
-      h += '<tr><td><button class="row-link" data-go="#' + t.id + '-summary">' + AR(i + 1) + '. ' + esc(t.title) + '</button></td><td>' + (s.read ? 'مقروء' : '—') + '</td><td>' + AR(s.answered) + ' / ' + AR(s.total) + '</td><td>' + AR(s.right) + '</td><td>' + AR(s.pct) + '٪' + bar(s.pct) + '</td></tr>';
+      h += '<tr><td><button class="row-link" data-go="#summary" data-sec="' + t.id + '">' + AR(i + 1) + '. ' + esc(t.title) + '</button></td><td>' + (s.read ? 'مقروء' : '—') + '</td><td>' + AR(s.answered) + ' / ' + AR(s.total) + '</td><td>' + AR(s.right) + '</td><td>' + AR(s.pct) + '٪' + bar(s.pct) + '</td></tr>';
     });
     h += '</tbody></table></div><section class="panel"><h2>مسح التقدّم</h2><p>يحذف علامات القراءة وكل إجابات التدريب ونتائج الاختبار الشامل المحفوظة في هذا المتصفح. لا يمكن التراجع عنه.</p><button class="danger" data-act="reset">امسح التقدّم كله</button></section>';
     return h;
@@ -378,15 +407,16 @@
   }
 
   /* ───── التوجيه ───── */
+  var pendingSec = null;
   function route(keepScroll) {
     clearInterval(timerHandle); timerHandle = null;
-    var h = (location.hash || '').replace(/^#\/?/, ''), m = /^(t\d+)-([a-z]+)$/.exec(h), html, top = 'course', title = 'مسار · ' + D.course.title;
-    var inTopic = m && topicById(m[1]) > -1;
-    document.body.classList.toggle('global-mode', !inTopic);
-    if (inTopic) {
-      var i = topicById(m[1]), tab = TABS.some(function (x) { return x[0] === m[2]; }) ? m[2] : 'summary';
-      html = topicView(i, tab); asideFor(i, tab); top = 'course'; title = T[i].title + ' · مسار';
-    } else if (h === 'bank') { html = bankView(); top = 'bank'; title = 'بنك الأسئلة · ' + title; }
+    var h = (location.hash || '').replace(/^#\/?/, ''), html, top = 'course', title = 'مسار · ' + D.course.title;
+    var legacy = /^(t\d+)-([a-z]+)$/.exec(h);   // روابط النسخة السابقة: #t3-quiz
+    if (legacy && topicById(legacy[1]) > -1) { pendingSec = legacy[1]; history.replaceState(null, '', '#' + legacy[2]); h = legacy[2]; }
+    var isAct = TABS.some(function (x) { return x[0] === h; });
+    document.body.classList.toggle('global-mode', !isAct);
+    if (isAct) { html = activityView(h); asideFor(h); title = TABS.filter(function (x) { return x[0] === h; })[0][1] + ' · مسار'; }
+    else if (h === 'bank') { html = bankView(); top = 'bank'; title = 'بنك الأسئلة · ' + title; }
     else if (h === 'mock') { html = mockView(); top = 'mock'; title = 'الاختبار الشامل · ' + title; }
     else if (h === 'progress') { html = progressView(); top = 'progress'; title = 'تقدّمي · ' + title; }
     else if (h === 'notes') { html = notesView(); top = 'notes'; title = 'ملاحظات على المصدر · ' + title; }
@@ -399,6 +429,8 @@
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     startTimer();
+    if (pendingSec && isAct) { var el = document.getElementById('s-' + pendingSec); pendingSec = null; if (el) { el.scrollIntoView(); return; } }
+    pendingSec = null;
     if (!keepScroll) { window.scrollTo(0, 0); main.focus({ preventScroll: true }); }
   }
   function rerender() { var y = window.scrollY; route(true); window.scrollTo(0, y); }
@@ -406,12 +438,11 @@
   /* ───── الأحداث ───── */
   document.addEventListener('click', function (ev) {
     var g = ev.target.closest('[data-go]');
-    if (g) { ev.preventDefault(); go(g.getAttribute('data-go')); return; }
+    if (g) { ev.preventDefault(); pendingSec = g.getAttribute('data-sec') || null; go(g.getAttribute('data-go')); return; }
     var b = ev.target.closest('[data-act]'); if (!b) return;
     var act = b.getAttribute('data-act'), v = b.getAttribute('data-v');
-    var hm = /^(t\d+)-/.exec((location.hash || '').slice(1)), ti = hm ? topicById(hm[1]) : -1, t = ti > -1 ? T[ti] : null;
     if (act === 'night') { var on = !nightOn(); document.documentElement.setAttribute('data-night-mode', on ? 'true' : 'false'); set('night', on); paintNight(); return; }
-    if (act === 'read' || act === 'unread') { if (act === 'read') S.read[t.id] = true; else delete S.read[t.id]; save(); rerender(); }
+    if (act === 'read' || act === 'unread') { var tid = b.getAttribute('data-t'); if (act === 'read') S.read[tid] = true; else delete S.read[tid]; save(); rerender(); }
     else if (act === 'toggle') { var a = b.parentNode.querySelector('.a'), show = a.hidden; a.hidden = !show; b.textContent = show ? 'أخفِ الجواب' : 'أظهر الجواب'; b.setAttribute('aria-expanded', show); }
     else if (act === 'showall' || act === 'hideall') {
       [].forEach.call(main.querySelectorAll('.term'), function (el) { var s = act === 'showall', a2 = el.querySelector('.a'), bt = el.querySelector('button'); a2.hidden = !s; bt.textContent = s ? 'أخفِ الجواب' : 'أظهر الجواب'; bt.setAttribute('aria-expanded', s); });
@@ -421,10 +452,10 @@
       S.ans[id] = { c: k, ok: k === q.correct }; save(); rerender();
     } else if (act === 'retry' || act === 'reset') {
       var box = document.createElement('span'); box.className = 'confirm';
-      box.innerHTML = '<span>' + (act === 'retry' ? 'ستُحذف إجاباتك في هذا المحور.' : 'سيُحذف تقدّمك كله، ولا يمكن التراجع.') + '</span><button class="danger" data-act="' + act + '-yes">' + (act === 'retry' ? 'نعم، أعد التدريب' : 'نعم، امسح') + '</button><button data-act="cancel">إلغاء</button>';
+      box.innerHTML = '<span>' + (act === 'retry' ? 'ستُحذف إجاباتك في أسئلة المقرر كلها.' : 'سيُحذف تقدّمك كله، ولا يمكن التراجع.') + '</span><button class="danger" data-act="' + act + '-yes">' + (act === 'retry' ? 'نعم، أعد التدريب' : 'نعم، امسح') + '</button><button data-act="cancel">إلغاء</button>';
       b.replaceWith(box); box.querySelector('button').focus();
     } else if (act === 'cancel') rerender();
-    else if (act === 'retry-yes') { topicQs(ti).forEach(function (q) { delete S.ans[q.id]; }); save(); route(); }
+    else if (act === 'retry-yes') { S.ans = {}; save(); route(); }
     else if (act === 'reset-yes') { S = blank(); save(); set('exam', null); set('hist', []); route(); }
     else if (act === 'bankview') { var bs = get('bank', { topic: 'all', type: 'all', status: 'all', view: 'practice' }); bs.view = v; set('bank', bs); route(); }
     else if (act === 'mockall') { var s0 = get('mockSel', { topics: [], count: 20 }); s0.topics = T.map(function (x, i) { return i; }); set('mockSel', s0); rerender(); }
@@ -448,7 +479,8 @@
   });
   document.addEventListener('change', function (ev) {
     var el = ev.target;
-    if (el.hasAttribute('data-bank')) { var bs = get('bank', { topic: 'all', type: 'all', status: 'all', view: 'practice' }); bs[el.getAttribute('data-bank')] = el.value; set('bank', bs); rerender(); }
+    if (el.hasAttribute('data-jump')) { var sec = document.getElementById('s-' + el.value); if (sec) { sec.scrollIntoView(); var hd = sec.querySelector('.unit-h'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); } } el.value = ''; }
+    else if (el.hasAttribute('data-bank')) { var bs = get('bank', { topic: 'all', type: 'all', status: 'all', view: 'practice' }); bs[el.getAttribute('data-bank')] = el.value; set('bank', bs); rerender(); }
     else if (el.getAttribute('data-act') === 'mocktopic') {
       var s = get('mockSel', { topics: T.map(function (x, i) { return i; }), count: 20 }), i = +el.getAttribute('data-v');
       s.topics = s.topics.filter(function (x) { return x !== i; }); if (el.checked) s.topics.push(i); s.topics.sort(function (a, b) { return a - b; });

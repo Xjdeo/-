@@ -171,9 +171,20 @@ footer { max-width: 1240px; margin: 0 auto; padding-block: 16px 32px; padding-in
 .next .lbl { font-size: .85rem; color: var(--muted); flex: 1; min-width: 160px; }
 .next .lbl b { display: block; color: var(--navy); font-family: var(--head); font-size: 1.1rem; }
 
+/* أقسام المحاور داخل كل نشاط */
+.unit { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 84px); }
+.unit + .unit { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line); }
+.unit-h { display: flex; align-items: flex-start; gap: 12px; font-size: 1.45rem; margin: 0 0 10px; outline: none; }
+.unit-h .small { font-family: var(--ui); font-size: .82rem; white-space: nowrap; }
+.unum { flex: none; width: 38px; height: 38px; margin-top: .15em; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: var(--on-navy); font-size: 1.15rem; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--brass); }
+.jump { display: grid; gap: 6px; }
+.jump select { width: 100%; }
+.toc { margin: 0; padding-inline-start: 1.6em; display: grid; gap: 6px; }
+.toc li::marker { color: var(--brass); font-weight: 700; }
+
 /* الملخص */
-.sum h2 { font-size: 1.3rem; margin-top: 1em; padding-bottom: .3em; border-bottom: 2px solid var(--tint-2); }
-.sum h2:first-child { margin-top: 0; }
+.sum h3 { font-size: 1.2rem; margin-top: 1em; padding-bottom: .3em; border-bottom: 2px solid var(--tint-2); }
+.sum h3:first-child { margin-top: 0; }
 .sum ul { margin: .5em 0 0; padding-inline-start: 1.2em; }
 .sum li { margin-bottom: .6em; line-height: 1.9; }
 .sum li::marker { color: var(--brass); }
