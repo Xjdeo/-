@@ -189,11 +189,39 @@
     });
     return h + '</div>';
   }
-  var qNum = 0;
-  function tQuiz(t, ti) {
-    var s = stats(ti), qs = topicQs(ti);
-    var h = '<p class="small">' + countQ(s.total) + ' · أجبت عن ' + AR(s.answered) + ' · صحيحة ' + AR(s.right) + '</p>';
-    qs.forEach(function (q) { h += qCard(q, ++qNum); });
+  /* ───── التدريب: جولات من ١٠ أسئلة بترتيب المذكرة ───── */
+  var ROUND = 10, NR = Math.ceil(QS.length / ROUND), pendingQ = null;
+  function roundQs(r) { return QS.slice(r * ROUND, r * ROUND + ROUND); }
+  function roundOf(id) { for (var i = 0; i < QS.length; i++) if (QS[i].id === id) return Math.floor(i / ROUND); return 0; }
+  function roundStat(r) { var qs = roundQs(r), a = 0, c = 0; qs.forEach(function (q) { var x = S.ans[q.id]; if (x) { a++; if (x.ok) c++; } }); return { n: qs.length, a: a, c: c }; }
+  function curRound() {
+    var r = get('round', null);
+    if (r == null || r < 0 || r >= NR) { r = 0; for (var i = 0; i < NR; i++) if (roundStat(i).a < roundStat(i).n) { r = i; break; } set('round', r); }
+    return r;
+  }
+  function quizView() {
+    var o = overall(), r = curRound(), qs = roundQs(r), rs = roundStat(r), first = r * ROUND;
+    var tis = []; qs.forEach(function (q) { if (tis.indexOf(q.ti) < 0) tis.push(q.ti); });
+    var h = '<div class="quiz-progress"><span class="stat"><b>' + AR(o.answered) + ' / ' + AR(o.total) + '</b>أُجيب عنها في المقرر</span><span class="stat"><b>' + AR(o.right) + '</b>صحيحة</span>' +
+      '<span class="grow">' + bar(pct(o.answered, o.total)) + '</span>' + (o.answered ? '<button class="ic" data-act="retry">' + ic('retry') + 'أعد التدريب كله</button>' : '') + '</div>';
+    h += '<div class="rounds" role="group" aria-label="الجولات">' + Array.apply(null, Array(NR)).map(function (x, i) {
+      var st = roundStat(i), cls = i === r ? 'current' : st.a === st.n ? 'done' : st.a ? 'part' : '';
+      return '<button class="' + cls + '" data-act="round" data-v="' + i + '"' + (i === r ? ' aria-current="true"' : '') + ' aria-label="الجولة ' + AR(i + 1) + '، أُجيب عن ' + AR(st.a) + ' من ' + AR(st.n) + '"><b>' + AR(i + 1) + '</b><small>' + AR(st.a) + '/' + AR(st.n) + '</small></button>';
+    }).join('') + '</div><div class="legend-row"><span><i class="d"></i>جولة مكتملة</span><span><i class="a"></i>بدأتها</span><span><i></i>لم تبدأ</span></div>';
+    h += '<div class="sectionhead"><h2>الجولة ' + AR(r + 1) + ' من ' + AR(NR) + '</h2><span class="small">الأسئلة ' + AR(first + 1) + '–' + AR(first + qs.length) + ' · ' +
+      tis.map(function (ti) { return 'المحور ' + AR(ti + 1); }).join('، ') + ' · أجبت عن ' + AR(rs.a) + ' من ' + AR(rs.n) + '</span></div>';
+    var last = -1;
+    qs.forEach(function (q, k) {
+      if (q.ti !== last) { last = q.ti; h += '<p class="round-topic">المحور ' + AR(q.ti + 1) + ': ' + esc(T[q.ti].title) + ' <span class="small">· ' + range(T[q.ti]) + '</span></p>'; }
+      h += qCard(q, first + k + 1);
+    });
+    var nextBtn = r < NR - 1 ? '<button class="primary ic" data-act="round" data-v="' + (r + 1) + '">الجولة التالية' + ic('next') + '</button>' : '<button class="primary ic" data-go="#mock">الاختبار الشامل' + ic('next') + '</button>';
+    if (rs.a === rs.n) h += '<section class="panel round-end" role="status"><div class="eyebrow">نهاية الجولة ' + AR(r + 1) + '</div><p class="score-big">' + AR(rs.c) + ' / ' + AR(rs.n) + '</p>' +
+      '<p>' + (rs.c === rs.n ? 'أجبت عن أسئلة الجولة كلها إجابة صحيحة.' : 'راجع تعليلات الأسئلة الخاطئة وصفحاتها قبل أن تنتقل، أو أعد الجولة.') + '</p>' +
+      '<div class="actions" style="margin-bottom:0">' + nextBtn + '<button class="ic" data-act="roundretry" data-v="' + r + '">' + ic('retry') + 'أعد هذه الجولة</button></div></section>';
+    else h += '<div class="actions">' + (r > 0 ? '<button class="ic" data-act="round" data-v="' + (r - 1) + '">' + ic('prev') + 'الجولة السابقة</button>' : '') +
+      (r < NR - 1 ? '<button class="ic" data-act="round" data-v="' + (r + 1) + '">تخطَّ إلى الجولة التالية' + ic('next') + '</button>' : '') + '</div>';
+    if (o.answered === QS.length) h += '<div class="note">أتممت أسئلة المقرر كلها: ' + AR(o.right) + ' من ' + AR(QS.length) + ' صحيحة. راجع الأخطاء من بنك الأسئلة (أخطأت فيها)، أو جرّب الاختبار الشامل.</div>';
     return h;
   }
   var INTRO = {
@@ -201,22 +229,16 @@
     map: 'تعرض كل خريطة العلاقات بين عناصر محورها كما رتّبتها المذكرة؛ رقم الصفحة بجانب العنصر، وما لم يُرقَّم يتبع صفحة العنصر الأعلى.',
     table: 'جداول المقارنة التي يتيحها المصدر في كل محور، وحيث لا مادة لمقارنة صريحة يُذكر ذلك.',
     terms: 'حاول استرجاع الجواب قبل إظهاره.',
-    quiz: 'أسئلة المقرر كلها مقسّمة بحسب المحاور. بعد كل إجابة يظهر الصحيح والتعليل ورقم الصفحة.'
+    quiz: 'أسئلة المقرر كلها بترتيب المذكرة، في جولات من عشرة أسئلة. بعد كل إجابة يظهر الصحيح والتعليل ورقم الصفحة، وفي آخر الجولة نتيجتها.'
   };
   function activityView(tab) {
-    var label = TABS.filter(function (x) { return x[0] === tab; })[0][1], fn = { summary: tSummary, map: tMap, table: tTable, terms: tTerms, quiz: tQuiz }[tab];
+    var label = TABS.filter(function (x) { return x[0] === tab; })[0][1], fn = { summary: tSummary, map: tMap, table: tTable, terms: tTerms }[tab];
     var h = '<div class="thead"><div class="eyebrow">المقرر كاملًا · ' + label + '</div><h1>' + label + '</h1><p class="small">' + INTRO[tab] + '</p></div>';
     if (tab === 'terms') h += '<div class="actions"><button data-act="showall">أظهر كل الأجوبة</button><button data-act="hideall">أخفِ كل الأجوبة</button></div>';
-    if (tab === 'quiz') {
-      var o = overall();
-      h += '<div class="quiz-progress"><span class="stat"><b>' + AR(o.answered) + ' / ' + AR(o.total) + '</b>أُجيب عنها</span><span class="stat"><b>' + AR(o.right) + '</b>صحيحة</span>' +
-        '<span class="grow">' + bar(pct(o.answered, o.total)) + '</span>' + (o.answered ? '<button class="ic" data-act="retry">' + ic('retry') + 'أعد التدريب كله</button>' : '') + '</div>';
-      qNum = 0;
-    }
+    if (tab === 'quiz') return h + quizView() + nextStep(tab);
     T.forEach(function (t, i) {
       h += '<section class="unit" id="s-' + t.id + '"><h2 class="unit-h"><span class="unum">' + AR(i + 1) + '</span><span>' + esc(t.title) + '<span class="small"> · ' + range(t) + '</span></span></h2>' + fn(t, i) + '</section>';
     });
-    if (tab === 'quiz' && overall().answered === QS.length) h += '<div class="note">أتممت أسئلة المقرر كلها: ' + AR(overall().right) + ' من ' + AR(QS.length) + ' صحيحة. راجع الأخطاء من بنك الأسئلة (أخطأت فيها)، أو جرّب الاختبار الشامل.</div>';
     return h + nextStep(tab);
   }
   function nextStep(tab) {
@@ -233,7 +255,7 @@
       var cnt = x[0] === 'quiz' ? '<span class="cnt">' + AR(a.quiz) + '/' + AR(QS.length) + '</span>' : x[0] === 'summary' ? '<span class="cnt">' + AR(a.summary) + '/' + AR(T.length) + '</span>' : '';
       return '<button data-go="#' + x[0] + '"' + (x[0] === tab ? ' class="active" aria-current="page"' : '') + '><span class="nav-glyph">' + ic(x[2]) + '</span>' + x[1] + cnt + '</button>';
     }).join('');
-    $('#jump').innerHTML = '<label for="jumpSel" class="small">انتقل إلى محور في هذه الصفحة</label><select id="jumpSel" data-jump="1"><option value="">اختر محورًا…</option>' +
+    $('#jump').innerHTML = '<label for="jumpSel" class="small">' + (tab === 'quiz' ? 'انتقل إلى أسئلة محور' : 'انتقل إلى محور في هذه الصفحة') + '</label><select id="jumpSel" data-jump="1"><option value="">اختر محورًا…</option>' +
       T.map(function (t, i) { return '<option value="' + t.id + '">' + AR(i + 1) + '. ' + esc(t.title) + '</option>'; }).join('') + '</select>';
     $('#progressText').textContent = AR(o.pct) + '٪';
     $('#progressBar').innerHTML = bar(o.pct);
@@ -415,6 +437,7 @@
     if (legacy && topicById(legacy[1]) > -1) { pendingSec = legacy[1]; history.replaceState(null, '', '#' + legacy[2]); h = legacy[2]; }
     var isAct = TABS.some(function (x) { return x[0] === h; });
     document.body.classList.toggle('global-mode', !isAct);
+    if (h === 'quiz' && pendingSec) { var tq = topicQs(topicById(pendingSec)), fq = tq.filter(function (q) { return !S.ans[q.id]; })[0] || tq[0]; if (fq) { set('round', roundOf(fq.id)); pendingQ = fq.id; } pendingSec = null; }
     if (isAct) { html = activityView(h); asideFor(h); title = TABS.filter(function (x) { return x[0] === h; })[0][1] + ' · مسار'; }
     else if (h === 'bank') { html = bankView(); top = 'bank'; title = 'بنك الأسئلة · ' + title; }
     else if (h === 'mock') { html = mockView(); top = 'mock'; title = 'الاختبار الشامل · ' + title; }
@@ -429,6 +452,7 @@
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     startTimer();
+    if (pendingQ) { var qe = main.querySelector('[data-q="' + pendingQ + '"]'); pendingQ = null; if (qe) { qe.scrollIntoView(); return; } }
     if (pendingSec && isAct) { var el = document.getElementById('s-' + pendingSec); pendingSec = null; if (el) { el.scrollIntoView(); return; } }
     pendingSec = null;
     if (!keepScroll) { window.scrollTo(0, 0); main.focus({ preventScroll: true }); }
@@ -455,8 +479,10 @@
       box.innerHTML = '<span>' + (act === 'retry' ? 'ستُحذف إجاباتك في أسئلة المقرر كلها.' : 'سيُحذف تقدّمك كله، ولا يمكن التراجع.') + '</span><button class="danger" data-act="' + act + '-yes">' + (act === 'retry' ? 'نعم، أعد التدريب' : 'نعم، امسح') + '</button><button data-act="cancel">إلغاء</button>';
       b.replaceWith(box); box.querySelector('button').focus();
     } else if (act === 'cancel') rerender();
-    else if (act === 'retry-yes') { S.ans = {}; save(); route(); }
-    else if (act === 'reset-yes') { S = blank(); save(); set('exam', null); set('hist', []); route(); }
+    else if (act === 'retry-yes') { S.ans = {}; save(); set('round', null); route(); }
+    else if (act === 'round') { set('round', +v); route(); var rh = main.querySelector('.rounds'); if (rh) rh.scrollIntoView(); }
+    else if (act === 'roundretry') { roundQs(+v).forEach(function (q) { delete S.ans[q.id]; }); save(); set('round', +v); route(); var rh2 = main.querySelector('.rounds'); if (rh2) rh2.scrollIntoView(); }
+    else if (act === 'reset-yes') { S = blank(); save(); set('exam', null); set('hist', []); set('round', null); route(); }
     else if (act === 'bankview') { var bs = get('bank', { topic: 'all', type: 'all', status: 'all', view: 'practice' }); bs.view = v; set('bank', bs); route(); }
     else if (act === 'mockall') { var s0 = get('mockSel', { topics: [], count: 20 }); s0.topics = T.map(function (x, i) { return i; }); set('mockSel', s0); rerender(); }
     else if (act === 'mockstart') {
@@ -479,7 +505,8 @@
   });
   document.addEventListener('change', function (ev) {
     var el = ev.target;
-    if (el.hasAttribute('data-jump')) { var sec = document.getElementById('s-' + el.value); if (sec) { sec.scrollIntoView(); var hd = sec.querySelector('.unit-h'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); } } el.value = ''; }
+    if (el.hasAttribute('data-jump') && el.value && /quiz/.test(location.hash)) { pendingSec = el.value; el.value = ''; route(); }
+    else if (el.hasAttribute('data-jump')) { var sec = document.getElementById('s-' + el.value); if (sec) { sec.scrollIntoView(); var hd = sec.querySelector('.unit-h'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); } } el.value = ''; }
     else if (el.hasAttribute('data-bank')) { var bs = get('bank', { topic: 'all', type: 'all', status: 'all', view: 'practice' }); bs[el.getAttribute('data-bank')] = el.value; set('bank', bs); rerender(); }
     else if (el.getAttribute('data-act') === 'mocktopic') {
       var s = get('mockSel', { topics: T.map(function (x, i) { return i; }), count: 20 }), i = +el.getAttribute('data-v');
