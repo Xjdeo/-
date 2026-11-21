@@ -1,43 +1,554 @@
 {
   "description": "سجل منع التكرار لتقارير الذكاء الاصطناعي اليومية. يُقرأ قبل كل تقرير ويُحدَّث بعده.",
   "last_report": {
-    "date": "2026-11-17",
-    "prepared_at": "2026-11-17T22:15:00+03:00",
-    "coverage_start": "2026-11-10T00:00:00+03:00",
-    "coverage_end": "2026-11-17T22:15:00+03:00",
-    "file": "ai-reports/reports/2026-11-17.md",
-    "doc_url": "https://claude.ai/artifact/6KkjY3ThGaqNnfvqJCdocE"
+    "date": "2026-11-21",
+    "prepared_at": "2026-11-21T09:40:00+03:00",
+    "coverage_start": "2026-11-17T22:15:00+03:00",
+    "coverage_end": "2026-11-21T09:40:00+03:00",
+    "file": "ai-reports/reports/2026-11-21.md",
+    "doc_url": "https://claude.ai/artifact/3bsrF9C6pbL1LByR6rPrMo",
+    "cadence": "weekly (Saturday)"
   },
   "items": [
-    {"id": "openai-gpt-6-2-astra-sol", "title": "GPT-6.2 Astra and GPT-6.2 Sol released", "company": "OpenAI", "url": "https://openai.com/index/introducing-gpt-6-2-astra-sol/", "announced": "2026-11-17", "first_listed": "2026-11-17", "availability": "available: ChatGPT Plus/Pro/Enterprise/Edu, Codex, API", "verification": "official-search", "notes": "Astra $8/$40 (-20%), Sol $2/$10; 1.05M context"},
-    {"id": "microsoft-ignite-2026", "title": "Microsoft Ignite 2026 day-1 announcements (Office in Copilot GA, Autopilot to Frontier, Copilotforce preview)", "company": "Microsoft", "url": "https://news.microsoft.com/events/ignite/2026/live-news/", "announced": "2026-11-17", "first_listed": "2026-11-17", "availability": "mixed: GA / preview / Frontier", "verification": "official-search", "notes": "Ignite runs Nov 17-20; watch for more"},
-    {"id": "nvidia-export-control-committee", "title": "NVIDIA board creates National Security and Export Control Oversight Committee", "company": "NVIDIA", "url": "https://nvidianews.nvidia.com/news/nvidia-board-of-directors-establishes-national-security-and-export-control-oversight-committee", "announced": "2026-11-17", "first_listed": "2026-11-17", "availability": "in effect", "verification": "official-search"},
-    {"id": "google-gemini-4-hydrogen", "title": "Gemini 4 Hydrogen introduced", "company": "Google", "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-hydrogen/", "announced": "2026-11-16", "first_listed": "2026-11-17", "availability": "rolling out globally; free via auto model selection in Gemini app; GA in Gemini Enterprise", "verification": "official-search", "notes": "date conflict: Wikipedia says Nov 12; $1.50/$7.50"},
-    {"id": "alibaba-qwen4-max", "title": "Qwen4-Max released", "company": "Alibaba", "url": "https://www.alibabacloud.com/blog/alibaba-unveils-qwen4-max-new-ai-teammate-for-work-creativity-and-discovery_603783", "announced": "2026-11-16", "first_listed": "2026-11-17", "availability": "API/Token Plan only, no open weights", "verification": "official-search", "notes": "price $1.50/$4.50 secondary only; preview ends Nov 25"},
-    {"id": "openai-csam-classifier", "title": "OpenAI CSAM image classifier and ChatGPT child-safety warnings", "company": "OpenAI", "url": "https://openai.com/index/strengthening-online-child-safety/", "announced": "2026-11-16", "first_listed": "2026-11-17", "availability": "free API for approved organizations", "verification": "official-search"},
-    {"id": "openai-academic-researchers-expansion", "title": "ChatGPT for Academic Researchers expanded", "company": "OpenAI", "url": "https://openai.com/index/expanding-chatgpt-for-academic-researchers/", "announced": "2026-11-16", "first_listed": "2026-11-17", "availability": "applications open 2026-11-23", "verification": "official-search", "notes": "conflict: 200,000 researchers (official) vs 50,000 grants (The Neuron)"},
-    {"id": "openai-chatgpt-wallet", "title": "ChatGPT Wallet", "company": "OpenAI", "url": "https://openai.com/index/introducing-chatgpt-wallet/", "announced": "2026-11-13", "first_listed": "2026-11-17", "availability": "Pro, US, 18+", "verification": "official-search"},
-    {"id": "baidu-ernie-5-5-flash-preview", "title": "ERNIE 5.5 Flash Preview", "company": "Baidu", "url": "https://www.hpcwire.com/aiwire/2026/11/12/baidu-expands-ai-portfolio-across-chips-cloud-models-and-agents/", "announced": "2026-11-12", "first_listed": "2026-11-17", "availability": "preview API on Qianfan; weights promised by 2026-11-25", "verification": "secondary"},
-    {"id": "nvidia-ceo-resignation", "title": "Jensen Huang resigns; Colette Kress interim CEO", "company": "NVIDIA", "url": "https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000082/nvidiaannouncesceotransiti.htm", "announced": "2026-11-11", "first_listed": "2026-11-17", "availability": "in effect", "verification": "official-search", "notes": "outlets date Nov 11 or 12; board investigation opened Nov 8"},
-    {"id": "google-gemini-4-carbon", "title": "Gemini 4 Carbon now available", "company": "Google", "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-carbon-now-available/", "announced": "2026-11-10", "first_listed": "2026-11-17", "availability": "API for paid devs; rolling to AI Ultra", "verification": "official-search", "notes": "intro $2/$10, rises to $4/$20 on 2026-12-01"},
-    {"id": "openai-businesses-in-chatgpt", "title": "Businesses in ChatGPT (beta) and Business Hub", "company": "OpenAI", "url": "https://openai.com/index/introducing-businesses-chatgpt/", "announced": "2026-11-10", "first_listed": "2026-11-17", "availability": "beta, US", "verification": "official-search"},
-    {"id": "anthropic-ipo-roadshow", "title": "Anthropic launches IPO roadshow", "company": "Anthropic", "url": "https://www.anthropic.com/news/roadshow-launch", "announced": "2026-11-10", "first_listed": "2026-11-17", "availability": "plan; registration not yet effective", "verification": "official-opened", "notes": "$70-78/share, Nasdaq: ANT"},
-    {"id": "anthropic-claude-fable-mythos-5-2", "title": "Claude Fable 5.2 and Claude Mythos 5.2", "company": "Anthropic", "url": "https://www.anthropic.com/claude-fable-and-mythos-5-2", "announced": "2026-11-09", "first_listed": "2026-11-17", "availability": "Fable: all platforms; Mythos: verified orgs", "verification": "official-opened", "notes": "listed as context (just before coverage window)"}
+    {
+      "id": "openai-chatgpt-space-plus",
+      "title": "ChatGPT Space rolling out to Plus",
+      "company": "OpenAI",
+      "url": "https://help.openai.com/en/articles/6825453-chatgpt-release-notes",
+      "announced": "2026-11-20",
+      "first_listed": "2026-11-21",
+      "availability": "Plus 18+, global gradual",
+      "verification": "official-search"
+    },
+    {
+      "id": "google-gemini-api-tool-retrieval",
+      "title": "Gemini API Tool Retrieval (preview)",
+      "company": "Google",
+      "url": "https://blog.google/innovation-and-ai/technology/developers-tools/gemini-api-tool-retrieval/",
+      "announced": "2026-11-19",
+      "first_listed": "2026-11-21",
+      "availability": "preview, Interactions API",
+      "verification": "official-search",
+      "notes": "exact date ~Nov 19-20"
+    },
+    {
+      "id": "openai-chatgpt-mobile-redesign",
+      "title": "ChatGPT mobile layout redesign; Health expansion",
+      "company": "OpenAI",
+      "url": "https://help.openai.com/en/articles/6825453-chatgpt-release-notes",
+      "announced": "2026-11-19",
+      "first_listed": "2026-11-21",
+      "availability": "Pro, excl. EEA/UK/CH/KR",
+      "verification": "official-search"
+    },
+    {
+      "id": "eu-commission-ai-cyberattack",
+      "title": "European Commission confirms AI-assisted cyberattack",
+      "company": "European Commission",
+      "url": "https://therecord.media/european-commission-confirms-cyberattack-using-ai",
+      "announced": "2026-11-19",
+      "first_listed": "2026-11-21",
+      "availability": "n/a",
+      "verification": "secondary",
+      "notes": "detected Oct 22; ARTEX suspected per CERT-EU reports"
+    },
+    {
+      "id": "anthropic-ipo-pricing-trading",
+      "title": "Anthropic IPO priced $83; trading began Nov 19, closed $97.17",
+      "company": "Anthropic",
+      "url": "https://www.anthropic.com/news/anthropic-prices-initial-public-offering",
+      "announced": "2026-11-18",
+      "first_listed": "2026-11-21",
+      "availability": "listed Nasdaq: ANT",
+      "verification": "official-opened",
+      "notes": "update to anthropic-ipo-roadshow; size 81.3B vs 93.5B conflict"
+    },
+    {
+      "id": "google-gemini-4-neon",
+      "title": "Gemini 4 Neon",
+      "company": "Google",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-neon/",
+      "announced": "2026-11-18",
+      "first_listed": "2026-11-21",
+      "availability": "API, AI Studio, Gemini app Pro/Ultra",
+      "verification": "official-opened",
+      "notes": "$3/$15, 1M context"
+    },
+    {
+      "id": "google-genie-4-availability",
+      "title": "Genie 4 available (Ultra, then Gemini API)",
+      "company": "Google DeepMind",
+      "url": "https://blog.google/innovation-and-ai/technology/developers-tools/genie-4-in-gemini-api/",
+      "announced": "2026-11-18",
+      "first_listed": "2026-11-21",
+      "availability": "Ultra; API from Nov 19",
+      "verification": "official-search"
+    },
+    {
+      "id": "gao-ai-platforms-report",
+      "title": "GAO-27-108814: safeguards of 4 platforms bypassed <12h",
+      "company": "US GAO",
+      "url": "https://www.nextgov.com/artificial-intelligence/2026/11/major-ai-platforms-generated-viable-plans-terrorist-attacks-gao-finds/417305/",
+      "announced": "2026-11-18",
+      "first_listed": "2026-11-21",
+      "availability": "published",
+      "verification": "secondary"
+    },
+    {
+      "id": "openai-le-figaro",
+      "title": "OpenAI–Le Figaro partnership",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/le-groupe-figaro-and-openai-announce-partnership/",
+      "announced": "2026-11-18",
+      "first_listed": "2026-11-21",
+      "availability": "not announced",
+      "verification": "official-search"
+    },
+    {
+      "id": "openai-chatgpt-for-sales",
+      "title": "ChatGPT for Sales and Sales plugin",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/introducing-chatgpt-for-sales/",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-21",
+      "availability": "Business/Enterprise, varies",
+      "verification": "official-search",
+      "notes": "date 17 or 18"
+    },
+    {
+      "id": "openai-chip-design-synopsys",
+      "title": "OpenAI chip design research with Synopsys",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/advancing-chip-design-with-our-models/",
+      "announced": "2026-11-18",
+      "first_listed": "2026-11-21",
+      "availability": "research",
+      "verification": "official-search"
+    },
+    {
+      "id": "nvidia-q3-fy2027-results",
+      "title": "NVIDIA Q3 FY2027 results; Hopper shipments to China halted",
+      "company": "NVIDIA",
+      "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-third-quarter-fiscal-2027",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-21",
+      "availability": "published",
+      "verification": "official-opened",
+      "notes": "$115.8B; Q4 guide $130B"
+    },
+    {
+      "id": "microsoft-mai-models-ignite",
+      "title": "MAI-Code-2 / Code-2-Flash / Image-2.7 / Cyber-2-Flash; agent platform GA items",
+      "company": "Microsoft",
+      "url": "https://news.microsoft.com/events/ignite/2026/book-of-news/",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-21",
+      "availability": "Code-2 GA in GitHub; others preview/GA",
+      "verification": "official-opened",
+      "notes": "update to microsoft-ignite-2026"
+    },
+    {
+      "id": "google-gemini-retention-change",
+      "title": "Gemini chat retention ~2 months when history off; separate training toggle",
+      "company": "Google",
+      "url": "https://blog.google/innovation-and-ai/products/gemini-app/updated-controls/",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-21",
+      "availability": "rolling out",
+      "verification": "official-search"
+    },
+    {
+      "id": "anthropic-linked-billing",
+      "title": "Linked billing (beta)",
+      "company": "Anthropic",
+      "url": "https://platform.claude.com/docs/en/manage-claude/oauth-apps/organization-billing-connections",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-21",
+      "availability": "beta",
+      "verification": "official-search"
+    },
+    {
+      "id": "oregon-openai-lawsuit",
+      "title": "Oregon AG sues OpenAI ($2.035B, child safety)",
+      "company": "OpenAI",
+      "url": "https://www.doj.state.or.us/media-home/news-media-releases/ag-rayfield-files-2b-lawsuit-against-open-ai-launches-keeping-kids-safe-initiative/",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-21",
+      "availability": "filed",
+      "verification": "official-search"
+    },
+    {
+      "id": "california-openai-lawsuit",
+      "title": "California AG sues OpenAI (agent loss-of-control incidents)",
+      "company": "OpenAI",
+      "url": "https://oag.ca.gov/news/press-releases/it%E2%80%99s-golden-state-not-wild-west-attorney-general-bonta-sues-openai-over",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-21",
+      "availability": "filed",
+      "verification": "official-search"
+    },
+    {
+      "id": "bis-remote-access-rule",
+      "title": "BIS rule on remote access to advanced chips",
+      "company": "US Commerce (BIS)",
+      "url": "https://www.bis.gov/press-release/bis-issues-rule-addressing-remote-access-american-super-intelligence-technology",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-21",
+      "availability": "effective 2026-11-19",
+      "verification": "official-search"
+    },
+    {
+      "id": "openai-tensorwave-457mw",
+      "title": "OpenAI–TensorWave 457MW AMD capacity",
+      "company": "OpenAI",
+      "url": "https://www.datacenterdynamics.com/en/news/openai-signs-on-for-457mw-ai-capacity-with-tensorwave",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-21",
+      "availability": "from H1 2027",
+      "verification": "secondary"
+    },
+    {
+      "id": "mistral-vibe-desktop",
+      "title": "Mistral Vibe Desktop (macOS, Windows)",
+      "company": "Mistral AI",
+      "url": "https://the-decoder.com/mistral-plays-catch-up-with-vibe-desktop-as-rivals-already-command-full-operating-systems/",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-21",
+      "availability": "available",
+      "verification": "secondary",
+      "notes": "date approximate"
+    },
+    {
+      "id": "anthropic-claude-meetings",
+      "title": "Claude Meetings, Whiteboards, Sheets (beta) — confirmed",
+      "company": "Anthropic",
+      "url": "https://claude.com/resources/articles/claude-meetings",
+      "announced": "2026-11-12",
+      "first_listed": "2026-11-21",
+      "availability": "beta",
+      "verification": "official-search",
+      "notes": "moved from unconfirmed"
+    },
+    {
+      "id": "openai-embedded-assessments",
+      "title": "OpenAI embedded assessments (Apollo, METR, Transluce, Goodfire) — confirmed",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/our-first-phase-of-embedded-assessments/",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-21",
+      "availability": "first phase started",
+      "verification": "official-search",
+      "notes": "moved from unconfirmed"
+    },
+    {
+      "id": "palo-alto-applied-compute",
+      "title": "Palo Alto Networks to acquire Applied Compute ($4.5B stock)",
+      "company": "Palo Alto Networks",
+      "url": "https://www.sec.gov/Archives/edgar/data/0001327567/000132756726000030/ex992pressrelease_november.htm",
+      "announced": "2026-11-19",
+      "first_listed": "2026-11-21",
+      "availability": "pending approvals",
+      "verification": "official-search",
+      "notes": "announcement date uncertain (Nov 9 or 19)"
+    },
+    {
+      "id": "openai-gpt-6-2-astra-sol",
+      "title": "GPT-6.2 Astra and GPT-6.2 Sol released",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/introducing-gpt-6-2-astra-sol/",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-17",
+      "availability": "available: ChatGPT Plus/Pro/Enterprise/Edu, Codex, API",
+      "verification": "official-search",
+      "notes": "Astra $8/$40 (-20%), Sol $2/$10; 1.05M context"
+    },
+    {
+      "id": "microsoft-ignite-2026",
+      "title": "Microsoft Ignite 2026 day-1 announcements (Office in Copilot GA, Autopilot to Frontier, Copilotforce preview)",
+      "company": "Microsoft",
+      "url": "https://news.microsoft.com/events/ignite/2026/live-news/",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-17",
+      "availability": "mixed: GA / preview / Frontier",
+      "verification": "official-search",
+      "notes": "Ignite runs Nov 17-20; watch for more"
+    },
+    {
+      "id": "nvidia-export-control-committee",
+      "title": "NVIDIA board creates National Security and Export Control Oversight Committee",
+      "company": "NVIDIA",
+      "url": "https://nvidianews.nvidia.com/news/nvidia-board-of-directors-establishes-national-security-and-export-control-oversight-committee",
+      "announced": "2026-11-17",
+      "first_listed": "2026-11-17",
+      "availability": "in effect",
+      "verification": "official-search"
+    },
+    {
+      "id": "google-gemini-4-hydrogen",
+      "title": "Gemini 4 Hydrogen introduced",
+      "company": "Google",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-hydrogen/",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-17",
+      "availability": "rolling out globally; free via auto model selection in Gemini app; GA in Gemini Enterprise",
+      "verification": "official-search",
+      "notes": "date conflict: Wikipedia says Nov 12; $1.50/$7.50"
+    },
+    {
+      "id": "alibaba-qwen4-max",
+      "title": "Qwen4-Max released",
+      "company": "Alibaba",
+      "url": "https://www.alibabacloud.com/blog/alibaba-unveils-qwen4-max-new-ai-teammate-for-work-creativity-and-discovery_603783",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-17",
+      "availability": "API/Token Plan only, no open weights",
+      "verification": "official-search",
+      "notes": "price $1.50/$4.50 secondary only; preview ends Nov 25"
+    },
+    {
+      "id": "openai-csam-classifier",
+      "title": "OpenAI CSAM image classifier and ChatGPT child-safety warnings",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/strengthening-online-child-safety/",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-17",
+      "availability": "free API for approved organizations",
+      "verification": "official-search"
+    },
+    {
+      "id": "openai-academic-researchers-expansion",
+      "title": "ChatGPT for Academic Researchers expanded",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/expanding-chatgpt-for-academic-researchers/",
+      "announced": "2026-11-16",
+      "first_listed": "2026-11-17",
+      "availability": "applications open 2026-11-23",
+      "verification": "official-search",
+      "notes": "conflict: 200,000 researchers (official) vs 50,000 grants (The Neuron)"
+    },
+    {
+      "id": "openai-chatgpt-wallet",
+      "title": "ChatGPT Wallet",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/introducing-chatgpt-wallet/",
+      "announced": "2026-11-13",
+      "first_listed": "2026-11-17",
+      "availability": "Pro, US, 18+",
+      "verification": "official-search"
+    },
+    {
+      "id": "baidu-ernie-5-5-flash-preview",
+      "title": "ERNIE 5.5 Flash Preview",
+      "company": "Baidu",
+      "url": "https://www.hpcwire.com/aiwire/2026/11/12/baidu-expands-ai-portfolio-across-chips-cloud-models-and-agents/",
+      "announced": "2026-11-12",
+      "first_listed": "2026-11-17",
+      "availability": "preview API on Qianfan; weights promised by 2026-11-25",
+      "verification": "secondary"
+    },
+    {
+      "id": "nvidia-ceo-resignation",
+      "title": "Jensen Huang resigns; Colette Kress interim CEO",
+      "company": "NVIDIA",
+      "url": "https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000082/nvidiaannouncesceotransiti.htm",
+      "announced": "2026-11-11",
+      "first_listed": "2026-11-17",
+      "availability": "in effect",
+      "verification": "official-search",
+      "notes": "outlets date Nov 11 or 12; board investigation opened Nov 8"
+    },
+    {
+      "id": "google-gemini-4-carbon",
+      "title": "Gemini 4 Carbon now available",
+      "company": "Google",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-carbon-now-available/",
+      "announced": "2026-11-10",
+      "first_listed": "2026-11-17",
+      "availability": "API for paid devs; rolling to AI Ultra",
+      "verification": "official-search",
+      "notes": "intro $2/$10, rises to $4/$20 on 2026-12-01"
+    },
+    {
+      "id": "openai-businesses-in-chatgpt",
+      "title": "Businesses in ChatGPT (beta) and Business Hub",
+      "company": "OpenAI",
+      "url": "https://openai.com/index/introducing-businesses-chatgpt/",
+      "announced": "2026-11-10",
+      "first_listed": "2026-11-17",
+      "availability": "beta, US",
+      "verification": "official-search"
+    },
+    {
+      "id": "anthropic-ipo-roadshow",
+      "title": "Anthropic launches IPO roadshow",
+      "company": "Anthropic",
+      "url": "https://www.anthropic.com/news/roadshow-launch",
+      "announced": "2026-11-10",
+      "first_listed": "2026-11-17",
+      "availability": "plan; registration not yet effective",
+      "verification": "official-opened",
+      "notes": "$70-78/share, Nasdaq: ANT"
+    },
+    {
+      "id": "anthropic-claude-fable-mythos-5-2",
+      "title": "Claude Fable 5.2 and Claude Mythos 5.2",
+      "company": "Anthropic",
+      "url": "https://www.anthropic.com/claude-fable-and-mythos-5-2",
+      "announced": "2026-11-09",
+      "first_listed": "2026-11-17",
+      "availability": "Fable: all platforms; Mythos: verified orgs",
+      "verification": "official-opened",
+      "notes": "listed as context (just before coverage window)"
+    }
   ],
   "unconfirmed": [
-    {"id": "anthropic-claude-meetings", "title": "Claude Meetings / Whiteboards / Sheets", "company": "Anthropic", "url": "https://techcrunch.com/2026/11/10/anthropic-launches-claude-meetings-to-turn-workplace-discussions-into-plans-and-tasks/", "first_listed": "2026-11-17", "status": "secondary only; not on anthropic.com/news"},
-    {"id": "meta-muse-ember-1-0", "title": "Muse Ember 1.0", "company": "Meta", "url": "https://nhimg.org/llm-release-tracker", "first_listed": "2026-11-17", "status": "trackers only"},
-    {"id": "xai-grok-api-watermark", "title": "Grok API text watermark default", "company": "xAI", "url": "https://dev.to/hiroki-ii-ai/ai-daily-digest-november-9-2026-mistral-opens-le-chonk-weights-grok-api-watermarks-by-default-2gdm", "first_listed": "2026-11-17", "status": "conflicting dates (Nov 7 vs Nov 14)"},
-    {"id": "openai-external-evaluators", "title": "OpenAI agreements with Apollo Research, METR, Transluce, Goodfire; LVMH partnership", "company": "OpenAI", "url": "https://www.theneuron.ai/digest/everything-that-happened-in-ai-today-tuesday-november-17-2026/", "first_listed": "2026-11-17", "status": "newsletter only"},
-    {"id": "openai-voice-retirement-dec-11", "title": "ChatGPT Advanced/Standard Voice retirement on 2026-12-11 for GPT-Live", "company": "OpenAI", "url": "https://releasebot.io/updates/openai/chatgpt", "first_listed": "2026-11-17", "status": "secondary only"},
-    {"id": "us-federal-deepseek-removal", "title": "US federal civilian systems to remove DeepSeek", "company": "DeepSeek", "url": "https://blog.mean.ceo/latest-ai-announcements-news-november-2026/", "first_listed": "2026-11-17", "status": "no date, no government source"}
+    {
+      "id": "meta-muse-ember-1-0",
+      "title": "Muse Ember 1.0",
+      "company": "Meta",
+      "url": "https://nhimg.org/llm-release-tracker",
+      "first_listed": "2026-11-17",
+      "status": "trackers only"
+    },
+    {
+      "id": "xai-grok-api-watermark",
+      "title": "Grok API text watermark default",
+      "company": "xAI",
+      "url": "https://dev.to/hiroki-ii-ai/ai-daily-digest-november-9-2026-mistral-opens-le-chonk-weights-grok-api-watermarks-by-default-2gdm",
+      "first_listed": "2026-11-17",
+      "status": "conflicting dates (Nov 7 vs Nov 14)"
+    },
+    {
+      "id": "openai-voice-retirement-dec-11",
+      "title": "ChatGPT Advanced/Standard Voice retirement on 2026-12-11 for GPT-Live",
+      "company": "OpenAI",
+      "url": "https://releasebot.io/updates/openai/chatgpt",
+      "first_listed": "2026-11-17",
+      "status": "secondary only"
+    },
+    {
+      "id": "us-federal-deepseek-removal",
+      "title": "US federal civilian systems to remove DeepSeek",
+      "company": "DeepSeek",
+      "url": "https://blog.mean.ceo/latest-ai-announcements-news-november-2026/",
+      "first_listed": "2026-11-17",
+      "status": "no date, no government source"
+    },
+    {
+      "id": "apple-computer-use-agent",
+      "title": "Apple building computer-use agent (job listing)",
+      "company": "Apple",
+      "url": "https://riorundown.substack.com/p/ai-news-nov-20-2026-agentic-ai-infrastructure",
+      "first_listed": "2026-11-21",
+      "status": "job listing only"
+    },
+    {
+      "id": "grok-video-free-us",
+      "title": "Grok video generator free for US users",
+      "company": "xAI",
+      "url": "https://getcoai.com/news/xai-makes-grok-video-generator-free-as-openai-launches-gpt-5",
+      "first_listed": "2026-11-21",
+      "status": "likely recycled Aug 2025 news"
+    },
+    {
+      "id": "deepseek-release-nov-23",
+      "title": "DeepSeek release expected ~Nov 23",
+      "company": "DeepSeek",
+      "url": "",
+      "first_listed": "2026-11-21",
+      "status": "tracker speculation"
+    },
+    {
+      "id": "meta-muse-privacy-charm-price",
+      "title": "Meta Muse privacy bug reports; Muse Charm $300 Verizon bundle",
+      "company": "Meta",
+      "url": "https://www.gurufocus.com/news/9210854/meta-platforms-unveils-muse-charm-ai-device-ahead-of-2027-smartwatch-launch-meta",
+      "first_listed": "2026-11-21",
+      "status": "newsletters only"
+    },
+    {
+      "id": "mythos-amd-port",
+      "title": "Mythos ported Claude to AMD chips in 3 days",
+      "company": "Anthropic",
+      "url": "https://ipo.anthropic.com/video/us/roadshow/captions.vtt",
+      "first_listed": "2026-11-21",
+      "status": "company claim in roadshow video"
+    },
+    {
+      "id": "grok-4-8-and-agents",
+      "title": "Grok 4.8 gradual rollout; Grok Agents platform",
+      "company": "xAI",
+      "url": "https://www.bighatgroup.com/blog/xai-weekly-2026-11-09/",
+      "first_listed": "2026-11-21",
+      "status": "no official page"
+    },
+    {
+      "id": "chatgpt-ads-in-chat",
+      "title": "Ads inside ChatGPT conversations",
+      "company": "OpenAI",
+      "url": "https://searchengineland.com/chatgpt-visual-ads-are-rolling-out-501253",
+      "first_listed": "2026-11-21",
+      "status": "secondary; image-ad tests only confirmed"
+    },
+    {
+      "id": "isomorphic-5b-round",
+      "title": "Isomorphic Labs $5B round",
+      "company": "Isomorphic Labs",
+      "url": "https://aiweekly.co/alerts/isomorphic-labs-in-talks-for-5b-round-at-50b-valuation",
+      "first_listed": "2026-11-21",
+      "status": "talks only"
+    }
   ],
   "upcoming": [
-    {"date": "2026-11-18", "event": "NVIDIA Q3 FY2027 results (Nov 17 2pm PT)"},
-    {"date": "2026-11-20", "event": "Microsoft Ignite ends"},
-    {"date": "2026-11-23", "event": "ChatGPT for Academic Researchers applications open"},
-    {"date": "2026-11-25", "event": "qwen4-max-preview ends; ERNIE 5.5 Flash weights promised"},
-    {"date": "2026-12-01", "event": "Gemini 4 Carbon price rises to $4/$20"},
-    {"date": "2026-12-11", "event": "ChatGPT legacy voice retirement (unconfirmed)"}
+    {
+      "date": "2026-11-23",
+      "event": "ChatGPT for Academic Researchers applications open"
+    },
+    {
+      "date": "2026-11-25",
+      "event": "qwen4-max-preview ends; ERNIE 5.5 Flash weights promised"
+    },
+    {
+      "date": "2026-11-30",
+      "event": "AWS re:Invent Nov 30 - Dec 4"
+    },
+    {
+      "date": "2026-12-01",
+      "event": "Gemini 4 Carbon price rises to $4/$20 (one source: Nov 30)"
+    },
+    {
+      "date": "2026-12",
+      "event": "Copilot Code GA (plan)"
+    },
+    {
+      "date": "2026-12-11",
+      "event": "ChatGPT legacy voice retirement (unconfirmed)"
+    },
+    {
+      "date": "2026-12-17",
+      "event": "Old Gemini Gems removed"
+    },
+    {
+      "date": "2027-01-15",
+      "event": "BIS remote-access rule comment period ends (approx.)"
+    },
+    {
+      "date": "2027-02-10",
+      "event": "Claude Meetings free docs/boards period ends"
+    }
+  ],
+  "unlogged_daily_reports_backfilled": [
+    {
+      "date": "2026-11-18",
+      "url": "https://claude.ai/artifact/BvHQjvTQNFm9kbqRtBT8JV"
+    },
+    {
+      "date": "2026-11-19",
+      "url": "https://claude.ai/artifact/AsMgrHmqZ3rvS3DRAXQVGv"
+    },
+    {
+      "date": "2026-11-20",
+      "url": "https://claude.ai/artifact/TLupRDjjAF5uFEdxT3a7Y9"
+    }
   ]
 }
